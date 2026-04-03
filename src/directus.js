@@ -200,6 +200,7 @@ async function listQueueByStatus(status, { limit, nowIso } = {}) {
   const safeLimit = Math.min(100, Math.max(1, Number.parseInt(limit ?? '25', 10) || 25));
 
   const sort = schema.createdAtField ? `${schema.createdAtField},id` : 'id';
+  const now = typeof nowIso === 'string' && nowIso ? nowIso : new Date().toISOString();
   const query = {
     limit: safeLimit,
     sort,
@@ -214,8 +215,13 @@ async function listQueueByStatus(status, { limit, nowIso } = {}) {
     [`filter[${schema.statusField}][_eq]`]: status
   };
 
+  if (status === 'pending' && schema.nextRetryAtField) {
+    query[`filter[_or][0][${schema.nextRetryAtField}][_null]`] = 'true';
+    query[`filter[_or][1][${schema.nextRetryAtField}][_lte]`] = now;
+  }
+
   if (status === 'rate_limited' && schema.nextRetryAtField) {
-    query[`filter[${schema.nextRetryAtField}][_lte]`] = typeof nowIso === 'string' && nowIso ? nowIso : new Date().toISOString();
+    query[`filter[${schema.nextRetryAtField}][_lte]`] = now;
   }
 
   const payload = await directusRequest('GET', `/items/${encodeURIComponent(schema.collection)}`, { query });
@@ -232,11 +238,21 @@ async function patchRowById(id, patch) {
   return payload?.data || null;
 }
 
+async function claimLockById(id, lockUntilIso) {
+  const schema = await resolveGetApiSchema();
+  if (!schema.ok) return null;
+  if (!schema.nextRetryAtField) return null;
+  const until = typeof lockUntilIso === 'string' && lockUntilIso ? lockUntilIso : new Date(Date.now() + 120000).toISOString();
+  const patch = {};
+  patch[schema.nextRetryAtField] = until;
+  return patchRowById(id, patch);
+}
+
 module.exports = {
   getDirectusConfig,
   directusRequest,
   resolveGetApiSchema,
   listQueueByStatus,
+  claimLockById,
   patchRowById
 };
-

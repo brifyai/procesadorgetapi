@@ -45,18 +45,29 @@ function isValidPlate(plate) {
   return true;
 }
 
+function maybePadMotorcyclePlate(plate) {
+  const p = String(plate || '').trim().toUpperCase();
+  if (!/^[A-Z]{4}\d{2}$/.test(p)) return null;
+  return `${p.slice(0, 4)}0${p.slice(4)}`;
+}
+
 class CallSpacer {
   constructor({ callsPerMinute }) {
     const safe = Number.isFinite(callsPerMinute) ? callsPerMinute : 25;
     this.spacingMs = Math.ceil(60000 / clamp(safe, 1, 60000));
     this.nextAllowedAt = 0;
+    this.chain = Promise.resolve();
   }
 
   async waitTurn() {
-    const now = Date.now();
-    const waitMs = Math.max(0, this.nextAllowedAt - now);
-    if (waitMs > 0) await sleep(waitMs);
-    this.nextAllowedAt = Math.max(this.nextAllowedAt, Date.now()) + this.spacingMs;
+    const run = async () => {
+      const now = Date.now();
+      const waitMs = Math.max(0, this.nextAllowedAt - now);
+      if (waitMs > 0) await sleep(waitMs);
+      this.nextAllowedAt = Math.max(this.nextAllowedAt, Date.now()) + this.spacingMs;
+    };
+    this.chain = this.chain.then(run, run);
+    return this.chain;
   }
 }
 
@@ -118,8 +129,9 @@ function getGetApiConfig() {
   return { apiKey, baseUrl };
 }
 
-async function getApiGetPlateInfo(plate, { limiter } = {}) {
+async function getApiGetPlateInfo(plate, { limiter, waitGlobalBackoff } = {}) {
   const { apiKey, baseUrl } = getGetApiConfig();
+  if (typeof waitGlobalBackoff === 'function') await waitGlobalBackoff();
   await limiter.waitTurn();
   const url = `${baseUrl}/v1/vehicles/plate/${encodeURIComponent(plate)}`;
   const { res, data } = await fetchJsonWithTimeout(url, {
@@ -132,8 +144,9 @@ async function getApiGetPlateInfo(plate, { limiter } = {}) {
   return { status: res.status, ok: res.ok, data, res };
 }
 
-async function getApiGetAppraisal(plate, { limiter } = {}) {
+async function getApiGetAppraisal(plate, { limiter, waitGlobalBackoff } = {}) {
   const { apiKey, baseUrl } = getGetApiConfig();
+  if (typeof waitGlobalBackoff === 'function') await waitGlobalBackoff();
   await limiter.waitTurn();
   const url = `${baseUrl}/v1/vehicles/appraisal/${encodeURIComponent(plate)}`;
   const { res, data } = await fetchJsonWithTimeout(url, {
@@ -146,46 +159,61 @@ async function getApiGetAppraisal(plate, { limiter } = {}) {
   return { status: res.status, ok: res.ok, data, res };
 }
 
-async function processOneRow(row, { limiter } = {}) {
-  const schema = await directus.resolveGetApiSchema();
-  const id = row?.[schema.idField];
-  const detectionId = schema.detectionIdField ? row?.[schema.detectionIdField] : null;
-  const attempts = schema.attemptsField ? Number(row?.[schema.attemptsField] ?? 0) : 0;
-  const rawPlate = schema.plateField ? row?.[schema.plateField] : null;
-  const plate = normalizePlate(rawPlate);
+async function processOneRow(row, { limiter, schema, waitGlobalBackoff } = {}) {
+  const resolvedSchema = schema || await directus.resolveGetApiSchema();
+  const schemaRef = resolvedSchema;
+  const id = row?.[schemaRef.idField];
+  const detectionId = schemaRef.detectionIdField ? row?.[schemaRef.detectionIdField] : null;
+  const attempts = schemaRef.attemptsField ? Number(row?.[schemaRef.attemptsField] ?? 0) : 0;
+  const rawPlate = schemaRef.plateField ? row?.[schemaRef.plateField] : null;
+  const originalPlate = normalizePlate(rawPlate);
+  let plate = originalPlate;
   const nowIso = new Date().toISOString();
 
   if (!id) return { ok: false, reason: 'missing_id' };
 
   if (!isValidPlate(plate)) {
     const patch = {};
-    if (schema.statusField) patch[schema.statusField] = 'invalid_plate';
-    if (schema.attemptsField) patch[schema.attemptsField] = attempts + 1;
-    if (schema.reasonField) patch[schema.reasonField] = 'invalid_plate';
-    if (schema.messageField) patch[schema.messageField] = 'Patente inválida';
-    if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso;
-    if (schema.lastErrorAtField) patch[schema.lastErrorAtField] = nowIso;
-    if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = null;
+    if (schemaRef.statusField) patch[schemaRef.statusField] = 'invalid_plate';
+    if (schemaRef.attemptsField) patch[schemaRef.attemptsField] = attempts + 1;
+    if (schemaRef.reasonField) patch[schemaRef.reasonField] = 'invalid_plate';
+    if (schemaRef.messageField) patch[schemaRef.messageField] = 'Patente inválida';
+    if (schemaRef.fetchedAtField) patch[schemaRef.fetchedAtField] = nowIso;
+    if (schemaRef.lastErrorAtField) patch[schemaRef.lastErrorAtField] = nowIso;
+    if (schemaRef.nextRetryAtField) patch[schemaRef.nextRetryAtField] = null;
     await directus.patchRowById(id, patch);
     return { ok: true, status: 'invalid_plate', detectionId, plate };
   }
 
-  const plateRes = await getApiGetPlateInfo(plate, { limiter });
+  let plateRes = await getApiGetPlateInfo(plate, { limiter, waitGlobalBackoff });
+  if (plateRes.status === 404) {
+    const padded = maybePadMotorcyclePlate(plate);
+    if (padded && padded !== plate) {
+      const alt = await getApiGetPlateInfo(padded, { limiter, waitGlobalBackoff });
+      if (alt.ok) {
+        plate = padded;
+        plateRes = alt;
+      } else if (alt.status === 429) {
+        plate = padded;
+        plateRes = alt;
+      }
+    }
+  }
   if (plateRes.status === 429) {
     const retryAfter = extractRetryAfterSeconds(plateRes.res);
     const backoffSeconds = retryAfter ?? computeBackoffSeconds({ attempts, baseSeconds: 30, maxSeconds: 3600 });
     const nextRetryAt = new Date(Date.now() + backoffSeconds * 1000).toISOString();
     const patch = {};
-    if (schema.statusField) patch[schema.statusField] = 'rate_limited';
-    if (schema.attemptsField) patch[schema.attemptsField] = attempts + 1;
-    if (schema.upstreamStatusField) patch[schema.upstreamStatusField] = 429;
-    if (schema.reasonField) patch[schema.reasonField] = 'rate_limited';
-    if (schema.messageField) patch[schema.messageField] = 'Rate limited en /v1/vehicles/plate';
-    if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso;
-    if (schema.lastErrorAtField) patch[schema.lastErrorAtField] = nowIso;
-    if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = nextRetryAt;
-    if (schema.getapiField) {
-      patch[schema.getapiField] = {
+    if (schemaRef.statusField) patch[schemaRef.statusField] = 'rate_limited';
+    if (schemaRef.attemptsField) patch[schemaRef.attemptsField] = attempts + 1;
+    if (schemaRef.upstreamStatusField) patch[schemaRef.upstreamStatusField] = 429;
+    if (schemaRef.reasonField) patch[schemaRef.reasonField] = 'rate_limited';
+    if (schemaRef.messageField) patch[schemaRef.messageField] = 'Rate limited en /v1/vehicles/plate';
+    if (schemaRef.fetchedAtField) patch[schemaRef.fetchedAtField] = nowIso;
+    if (schemaRef.lastErrorAtField) patch[schemaRef.lastErrorAtField] = nowIso;
+    if (schemaRef.nextRetryAtField) patch[schemaRef.nextRetryAtField] = nextRetryAt;
+    if (schemaRef.getapiField) {
+      patch[schemaRef.getapiField] = {
         plate,
         fetched_at: nowIso,
         vehicle: null,
@@ -199,16 +227,20 @@ async function processOneRow(row, { limiter } = {}) {
 
   if (plateRes.status === 404) {
     const patch = {};
-    if (schema.statusField) patch[schema.statusField] = 'not_found';
-    if (schema.attemptsField) patch[schema.attemptsField] = attempts + 1;
-    if (schema.upstreamStatusField) patch[schema.upstreamStatusField] = 404;
-    if (schema.reasonField) patch[schema.reasonField] = 'not_found';
-    if (schema.messageField) patch[schema.messageField] = 'No encontrado en /v1/vehicles/plate';
-    if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso;
-    if (schema.lastErrorAtField) patch[schema.lastErrorAtField] = nowIso;
-    if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = null;
-    if (schema.getapiField) {
-      patch[schema.getapiField] = {
+    if (schemaRef.statusField) patch[schemaRef.statusField] = 'not_found';
+    if (schemaRef.attemptsField) patch[schemaRef.attemptsField] = attempts + 1;
+    if (schemaRef.upstreamStatusField) patch[schemaRef.upstreamStatusField] = 404;
+    if (schemaRef.reasonField) patch[schemaRef.reasonField] = 'not_found';
+    if (schemaRef.messageField) {
+      patch[schemaRef.messageField] = plate === originalPlate
+        ? 'No encontrado en /v1/vehicles/plate'
+        : 'No encontrado en /v1/vehicles/plate (incluyendo variante con 0 para motos)';
+    }
+    if (schemaRef.fetchedAtField) patch[schemaRef.fetchedAtField] = nowIso;
+    if (schemaRef.lastErrorAtField) patch[schemaRef.lastErrorAtField] = nowIso;
+    if (schemaRef.nextRetryAtField) patch[schemaRef.nextRetryAtField] = null;
+    if (schemaRef.getapiField) {
+      patch[schemaRef.getapiField] = {
         plate,
         fetched_at: nowIso,
         vehicle: null,
@@ -222,18 +254,18 @@ async function processOneRow(row, { limiter } = {}) {
 
   if (!plateRes.ok) {
     const backoffSeconds = computeBackoffSeconds({ attempts, baseSeconds: 60, maxSeconds: 3600 });
-    const nextRetryAt = schema.nextRetryAtField ? new Date(Date.now() + backoffSeconds * 1000).toISOString() : null;
+    const nextRetryAt = schemaRef.nextRetryAtField ? new Date(Date.now() + backoffSeconds * 1000).toISOString() : null;
     const patch = {};
-    if (schema.statusField) patch[schema.statusField] = 'error';
-    if (schema.attemptsField) patch[schema.attemptsField] = attempts + 1;
-    if (schema.upstreamStatusField) patch[schema.upstreamStatusField] = plateRes.status;
-    if (schema.reasonField) patch[schema.reasonField] = 'upstream_error';
-    if (schema.messageField) patch[schema.messageField] = `Error upstream en /v1/vehicles/plate: HTTP ${plateRes.status}`;
-    if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso;
-    if (schema.lastErrorAtField) patch[schema.lastErrorAtField] = nowIso;
-    if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = nextRetryAt;
-    if (schema.getapiField) {
-      patch[schema.getapiField] = {
+    if (schemaRef.statusField) patch[schemaRef.statusField] = 'error';
+    if (schemaRef.attemptsField) patch[schemaRef.attemptsField] = attempts + 1;
+    if (schemaRef.upstreamStatusField) patch[schemaRef.upstreamStatusField] = plateRes.status;
+    if (schemaRef.reasonField) patch[schemaRef.reasonField] = 'upstream_error';
+    if (schemaRef.messageField) patch[schemaRef.messageField] = `Error upstream en /v1/vehicles/plate: HTTP ${plateRes.status}`;
+    if (schemaRef.fetchedAtField) patch[schemaRef.fetchedAtField] = nowIso;
+    if (schemaRef.lastErrorAtField) patch[schemaRef.lastErrorAtField] = nowIso;
+    if (schemaRef.nextRetryAtField) patch[schemaRef.nextRetryAtField] = nextRetryAt;
+    if (schemaRef.getapiField) {
+      patch[schemaRef.getapiField] = {
         plate,
         fetched_at: nowIso,
         vehicle: null,
@@ -245,22 +277,22 @@ async function processOneRow(row, { limiter } = {}) {
     return { ok: true, status: 'error', detectionId, plate, nextRetryAt };
   }
 
-  const appraisalRes = await getApiGetAppraisal(plate, { limiter });
+  const appraisalRes = await getApiGetAppraisal(plate, { limiter, waitGlobalBackoff });
   if (appraisalRes.status === 429) {
     const retryAfter = extractRetryAfterSeconds(appraisalRes.res);
     const backoffSeconds = retryAfter ?? computeBackoffSeconds({ attempts, baseSeconds: 30, maxSeconds: 3600 });
     const nextRetryAt = new Date(Date.now() + backoffSeconds * 1000).toISOString();
     const patch = {};
-    if (schema.statusField) patch[schema.statusField] = 'rate_limited';
-    if (schema.attemptsField) patch[schema.attemptsField] = attempts + 1;
-    if (schema.upstreamStatusField) patch[schema.upstreamStatusField] = 429;
-    if (schema.reasonField) patch[schema.reasonField] = 'rate_limited';
-    if (schema.messageField) patch[schema.messageField] = 'Rate limited en /v1/vehicles/appraisal';
-    if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso;
-    if (schema.lastErrorAtField) patch[schema.lastErrorAtField] = nowIso;
-    if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = nextRetryAt;
-    if (schema.getapiField) {
-      patch[schema.getapiField] = {
+    if (schemaRef.statusField) patch[schemaRef.statusField] = 'rate_limited';
+    if (schemaRef.attemptsField) patch[schemaRef.attemptsField] = attempts + 1;
+    if (schemaRef.upstreamStatusField) patch[schemaRef.upstreamStatusField] = 429;
+    if (schemaRef.reasonField) patch[schemaRef.reasonField] = 'rate_limited';
+    if (schemaRef.messageField) patch[schemaRef.messageField] = 'Rate limited en /v1/vehicles/appraisal';
+    if (schemaRef.fetchedAtField) patch[schemaRef.fetchedAtField] = nowIso;
+    if (schemaRef.lastErrorAtField) patch[schemaRef.lastErrorAtField] = nowIso;
+    if (schemaRef.nextRetryAtField) patch[schemaRef.nextRetryAtField] = nextRetryAt;
+    if (schemaRef.getapiField) {
+      patch[schemaRef.getapiField] = {
         plate,
         fetched_at: nowIso,
         vehicle: plateRes.data ?? null,
@@ -277,16 +309,16 @@ async function processOneRow(row, { limiter } = {}) {
 
   if (appraisalRes.status === 404) {
     const patch = {};
-    if (schema.statusField) patch[schema.statusField] = 'not_found';
-    if (schema.attemptsField) patch[schema.attemptsField] = attempts + 1;
-    if (schema.upstreamStatusField) patch[schema.upstreamStatusField] = 404;
-    if (schema.reasonField) patch[schema.reasonField] = 'not_found';
-    if (schema.messageField) patch[schema.messageField] = 'No encontrado en /v1/vehicles/appraisal';
-    if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso;
-    if (schema.lastErrorAtField) patch[schema.lastErrorAtField] = nowIso;
-    if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = null;
-    if (schema.getapiField) {
-      patch[schema.getapiField] = {
+    if (schemaRef.statusField) patch[schemaRef.statusField] = 'not_found';
+    if (schemaRef.attemptsField) patch[schemaRef.attemptsField] = attempts + 1;
+    if (schemaRef.upstreamStatusField) patch[schemaRef.upstreamStatusField] = 404;
+    if (schemaRef.reasonField) patch[schemaRef.reasonField] = 'not_found';
+    if (schemaRef.messageField) patch[schemaRef.messageField] = 'No encontrado en /v1/vehicles/appraisal';
+    if (schemaRef.fetchedAtField) patch[schemaRef.fetchedAtField] = nowIso;
+    if (schemaRef.lastErrorAtField) patch[schemaRef.lastErrorAtField] = nowIso;
+    if (schemaRef.nextRetryAtField) patch[schemaRef.nextRetryAtField] = null;
+    if (schemaRef.getapiField) {
+      patch[schemaRef.getapiField] = {
         plate,
         fetched_at: nowIso,
         vehicle: plateRes.data ?? null,
@@ -303,18 +335,18 @@ async function processOneRow(row, { limiter } = {}) {
 
   if (!appraisalRes.ok) {
     const backoffSeconds = computeBackoffSeconds({ attempts, baseSeconds: 60, maxSeconds: 3600 });
-    const nextRetryAt = schema.nextRetryAtField ? new Date(Date.now() + backoffSeconds * 1000).toISOString() : null;
+    const nextRetryAt = schemaRef.nextRetryAtField ? new Date(Date.now() + backoffSeconds * 1000).toISOString() : null;
     const patch = {};
-    if (schema.statusField) patch[schema.statusField] = 'error';
-    if (schema.attemptsField) patch[schema.attemptsField] = attempts + 1;
-    if (schema.upstreamStatusField) patch[schema.upstreamStatusField] = appraisalRes.status;
-    if (schema.reasonField) patch[schema.reasonField] = 'upstream_error';
-    if (schema.messageField) patch[schema.messageField] = `Error upstream en /v1/vehicles/appraisal: HTTP ${appraisalRes.status}`;
-    if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso;
-    if (schema.lastErrorAtField) patch[schema.lastErrorAtField] = nowIso;
-    if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = nextRetryAt;
-    if (schema.getapiField) {
-      patch[schema.getapiField] = {
+    if (schemaRef.statusField) patch[schemaRef.statusField] = 'error';
+    if (schemaRef.attemptsField) patch[schemaRef.attemptsField] = attempts + 1;
+    if (schemaRef.upstreamStatusField) patch[schemaRef.upstreamStatusField] = appraisalRes.status;
+    if (schemaRef.reasonField) patch[schemaRef.reasonField] = 'upstream_error';
+    if (schemaRef.messageField) patch[schemaRef.messageField] = `Error upstream en /v1/vehicles/appraisal: HTTP ${appraisalRes.status}`;
+    if (schemaRef.fetchedAtField) patch[schemaRef.fetchedAtField] = nowIso;
+    if (schemaRef.lastErrorAtField) patch[schemaRef.lastErrorAtField] = nowIso;
+    if (schemaRef.nextRetryAtField) patch[schemaRef.nextRetryAtField] = nextRetryAt;
+    if (schemaRef.getapiField) {
+      patch[schemaRef.getapiField] = {
         plate,
         fetched_at: nowIso,
         vehicle: plateRes.data ?? null,
@@ -337,14 +369,14 @@ async function processOneRow(row, { limiter } = {}) {
   };
 
   const patch = {};
-  if (schema.statusField) patch[schema.statusField] = 'ok';
-  if (schema.attemptsField) patch[schema.attemptsField] = attempts + 1;
-  if (schema.upstreamStatusField) patch[schema.upstreamStatusField] = 200;
-  if (schema.reasonField) patch[schema.reasonField] = null;
-  if (schema.messageField) patch[schema.messageField] = null;
-  if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso;
-  if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = null;
-  if (schema.getapiField) patch[schema.getapiField] = resultPayload;
+  if (schemaRef.statusField) patch[schemaRef.statusField] = 'ok';
+  if (schemaRef.attemptsField) patch[schemaRef.attemptsField] = attempts + 1;
+  if (schemaRef.upstreamStatusField) patch[schemaRef.upstreamStatusField] = 200;
+  if (schemaRef.reasonField) patch[schemaRef.reasonField] = null;
+  if (schemaRef.messageField) patch[schemaRef.messageField] = null;
+  if (schemaRef.fetchedAtField) patch[schemaRef.fetchedAtField] = nowIso;
+  if (schemaRef.nextRetryAtField) patch[schemaRef.nextRetryAtField] = null;
+  if (schemaRef.getapiField) patch[schemaRef.getapiField] = resultPayload;
   await directus.patchRowById(id, patch);
 
   return { ok: true, status: 'ok', detectionId, plate };
@@ -355,16 +387,22 @@ async function startProcessor() {
   if (!baseUrl) throw new Error('DIRECTUS_URL no está configurado');
   if (!collection) throw new Error('DIRECTUS_GETAPI_COLLECTION no está configurado');
 
-  await directus.resolveGetApiSchema();
+  const schema = await directus.resolveGetApiSchema();
 
   const logLevel = getLogLevel();
   const callsPerMinute = parseEnvInt('GETAPI_MAX_CALLS_PER_MIN', 25);
   const limiter = new CallSpacer({ callsPerMinute });
   const batchSize = parseEnvInt('PROCESSOR_BATCH_SIZE', 10);
   const idleWaitMs = parseEnvInt('PROCESSOR_IDLE_WAIT_MS', 10000);
-  const loopWaitMs = parseEnvInt('PROCESSOR_LOOP_WAIT_MS', 50);
+  const loopWaitMs = parseEnvInt('PROCESSOR_LOOP_WAIT_MS', 0);
   const heartbeatMs = parseEnvInt('PROCESSOR_HEARTBEAT_MS', 30000);
   const idleLogMs = parseEnvInt('PROCESSOR_IDLE_LOG_MS', 60000);
+  const concurrency = clamp(parseEnvInt('PROCESSOR_CONCURRENCY', 4), 1, 50);
+  const lockMs = clamp(parseEnvInt('PROCESSOR_LOCK_MS', 120000), 5000, 3600000);
+  const claimEnabledRaw = String(process.env.PROCESSOR_CLAIM_LOCK ?? 'true').trim().toLowerCase();
+  const claimEnabled = !(claimEnabledRaw === '0' || claimEnabledRaw === 'false' || claimEnabledRaw === 'no' || claimEnabledRaw === 'off');
+  const queueMax = clamp(parseEnvInt('PROCESSOR_QUEUE_MAX', batchSize * concurrency * 4), batchSize, 2000);
+  const refillMin = clamp(parseEnvInt('PROCESSOR_QUEUE_REFILL_MIN', batchSize * concurrency), 1, queueMax);
 
   logAt(logLevel, 'info', 'Procesador GetAPI iniciado', {
     collection,
@@ -372,7 +410,11 @@ async function startProcessor() {
     calls_per_min: callsPerMinute,
     batch_size: batchSize,
     idle_wait_ms: idleWaitMs,
-    loop_wait_ms: loopWaitMs
+    loop_wait_ms: loopWaitMs,
+    concurrency,
+    claim_lock: claimEnabled && Boolean(schema.nextRetryAtField),
+    lock_ms: lockMs,
+    queue_max: queueMax
   });
 
   let globalBackoffUntil = 0;
@@ -381,13 +423,15 @@ async function startProcessor() {
   let lastBackoffLoggedUntil = 0;
   const counters = { processed: 0, ok: 0, rate_limited: 0, error: 0, not_found: 0, invalid_plate: 0 };
 
-  while (true) {
-    const now = Date.now();
-    if (heartbeatMs > 0 && now - lastHeartbeatAt >= heartbeatMs) {
-      lastHeartbeatAt = now;
-      logAt(logLevel, 'info', 'Heartbeat', { ...counters });
-    }
-    if (globalBackoffUntil > now) {
+  const queue = [];
+  const queuedIds = new Set();
+  const inFlightIds = new Set();
+  let lastRefillAt = 0;
+  let lastSource = null;
+
+  const waitGlobalBackoff = async () => {
+    while (globalBackoffUntil > Date.now()) {
+      const now = Date.now();
       if (now >= lastBackoffLoggedUntil) {
         lastBackoffLoggedUntil = now + Math.min(30000, globalBackoffUntil - now);
         logAt(logLevel, 'warn', 'Backoff global activo por rate limit', {
@@ -396,49 +440,98 @@ async function startProcessor() {
         });
       }
       await sleep(Math.min(1000, globalBackoffUntil - now));
-      continue;
     }
+  };
 
+  const enqueueRows = (rows, source) => {
+    if (!Array.isArray(rows) || rows.length === 0) return 0;
+    let added = 0;
+    for (const row of rows) {
+      const id = row?.[schema.idField];
+      if (id == null) continue;
+      const key = String(id);
+      if (queuedIds.has(key) || inFlightIds.has(key)) continue;
+      if (queue.length >= queueMax) break;
+      queue.push({ row, source });
+      queuedIds.add(key);
+      added += 1;
+      lastSource = source;
+    }
+    return added;
+  };
+
+  const refillQueue = async () => {
+    if (queue.length >= queueMax) return;
+    const now = Date.now();
+    if (now - lastRefillAt < 200) return;
+    lastRefillAt = now;
+    const need = Math.min(queueMax - queue.length, Math.max(refillMin, batchSize));
     const nowIso = new Date().toISOString();
-    let rows = [];
-    let source = 'pending';
     try {
-      rows = await directus.listQueueByStatus('pending', { limit: batchSize, nowIso });
-      source = 'pending';
-
-      if (!rows || rows.length === 0) {
-        rows = await directus.listQueueByStatus('rate_limited', { limit: batchSize, nowIso });
-        source = 'rate_limited';
+      let rows = await directus.listQueueByStatus('pending', { limit: need, nowIso });
+      let added = enqueueRows(rows, 'pending');
+      if (added === 0) {
+        rows = await directus.listQueueByStatus('rate_limited', { limit: need, nowIso });
+        added = enqueueRows(rows, 'rate_limited');
       }
+      if (added > 0) logAt(logLevel, 'info', 'Cola recargada', { added, queue: queue.length, source: lastSource });
     } catch (e) {
-      logAt(logLevel, 'error', 'Error consultando cola en Directus', { message: e?.message || String(e) });
+      logAt(logLevel, 'error', 'Error recargando cola desde Directus', { message: e?.message || String(e) });
       await sleep(5000);
-      continue;
     }
+  };
 
-    if (!rows || rows.length === 0) {
+  const takeNext = async () => {
+    while (true) {
+      await refillQueue();
+      const item = queue.shift();
+      if (item) {
+        const id = item.row?.[schema.idField];
+        const key = String(id);
+        queuedIds.delete(key);
+        if (inFlightIds.has(key)) continue;
+        inFlightIds.add(key);
+        return item;
+      }
+      const now = Date.now();
       if (idleLogMs > 0 && now - lastIdleLogAt >= idleLogMs) {
         lastIdleLogAt = now;
         logAt(logLevel, 'info', 'Sin pendientes (idle)', { idle_wait_ms: idleWaitMs });
       }
       await sleep(idleWaitMs);
-      continue;
     }
+  };
 
-    logAt(logLevel, 'info', 'Batch obtenido', { source, rows: rows.length });
+  const workerLoop = async (workerId) => {
+    while (true) {
+      const now = Date.now();
+      if (heartbeatMs > 0 && now - lastHeartbeatAt >= heartbeatMs) {
+        lastHeartbeatAt = now;
+        logAt(logLevel, 'info', 'Heartbeat', { ...counters, queue: queue.length, inflight: inFlightIds.size });
+      }
 
-    for (const row of rows) {
-      const schema = await directus.resolveGetApiSchema();
+      await waitGlobalBackoff();
+      const { row, source } = await takeNext();
       const id = row?.[schema.idField];
+      const key = String(id);
       const rawPlate = schema.plateField ? row?.[schema.plateField] : null;
       const plate = normalizePlate(rawPlate);
       const attempts = schema.attemptsField ? Number(row?.[schema.attemptsField] ?? 0) : 0;
 
-      logAt(logLevel, 'debug', 'Procesando registro', { id, plate, attempts, source });
+      if (claimEnabled && schema.nextRetryAtField && source === 'pending') {
+        const lockUntilIso = new Date(Date.now() + lockMs).toISOString();
+        try {
+          await directus.claimLockById(id, lockUntilIso);
+        } catch (e) {
+          logAt(logLevel, 'warn', 'No se pudo aplicar claim lock', { id, plate, message: e?.message || String(e) });
+        }
+      }
+
+      logAt(logLevel, 'debug', 'Procesando registro', { worker: workerId, id, plate, attempts, source, queue: queue.length });
 
       let outcome = null;
       try {
-        outcome = await processOneRow(row, { limiter });
+        outcome = await processOneRow(row, { limiter, schema, waitGlobalBackoff });
       } catch (e) {
         const message = e?.message || String(e);
         const backoffSeconds = computeBackoffSeconds({ attempts, baseSeconds: 60, maxSeconds: 3600 });
@@ -460,13 +553,16 @@ async function startProcessor() {
           }
         }
         outcome = { ok: false, status: 'error', plate, id, nextRetryAt, error: message };
-        logAt(logLevel, 'error', 'Excepción procesando registro', { id, plate, message });
+        logAt(logLevel, 'error', 'Excepción procesando registro', { worker: workerId, id, plate, message });
+      } finally {
+        inFlightIds.delete(key);
       }
 
       counters.processed += 1;
       if (outcome?.status && outcome.status in counters) counters[outcome.status] += 1;
 
       logAt(logLevel, 'info', 'Resultado', {
+        worker: workerId,
         id,
         plate,
         status: outcome?.status || null,
@@ -478,11 +574,16 @@ async function startProcessor() {
       }
       if (loopWaitMs > 0) await sleep(loopWaitMs);
     }
+  };
 
-    if (source === 'rate_limited' && rows.length < batchSize) {
-      await sleep(250);
-    }
+  for (let i = 1; i <= concurrency; i += 1) {
+    workerLoop(i).catch((e) => {
+      logAt(logLevel, 'error', 'Worker terminó por error', { worker: i, message: e?.message || String(e) });
+    });
+    await sleep(10);
   }
+
+  while (true) await sleep(60000);
 }
 
 module.exports = { startProcessor };

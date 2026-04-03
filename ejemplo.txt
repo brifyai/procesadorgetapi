@@ -1,0 +1,81 @@
+{
+    "plate": "LPFH41",
+    "fetched_at": "2026-04-02T17:42:38.665Z",
+    "vehicle": {
+        "id": "4053828",
+        "licensePlate": "LPFH41",
+        "dvLicensePlate": "0",
+        "modelId": "1078",
+        "version": "2.0 ACTIVE L3 8P BLUEHDI 180 AT DIESEL",
+        "mileage": 134959,
+        "color": "GRIS PLATINUM",
+        "year": 2020,
+        "codeSii": null,
+        "vinNumber": "VF3VEAHXHLZ004272",
+        "engineNumber": "10DY2V4037552",
+        "engine": "2000",
+        "fuel": "DIESEL",
+        "transmission": "MECANICA",
+        "doors": 5,
+        "urlImage": "",
+        "model": {
+            "id": "1078",
+            "name": "TRAVELLER",
+            "typeVehicle": {
+                "name": "MINIBUS"
+            },
+            "brand": {
+                "name": "PEUGEOT"
+            }
+        },
+        "monthRT": "Abril",
+        "_isPro": true,
+        "brand": {
+            "name": "PEUGEOT"
+        }
+    },
+    "appraisal": {
+        "vehicleId": "4053828",
+        "informacionFiscal": {
+            "codigo": "NA",
+            "permiso": "244603",
+            "tasacion": 12338488,
+            "ano_info_fiscal": 2026
+        },
+        "precioUsado": {
+            "precio": 16200000,
+            "banda_max": 17000000,
+            "banda_min": 15300000
+        },
+        "precioRetoma": 11660000,
+        "vehicle": {
+            "id": "4053828",
+            "licensePlate": "LPFH41",
+            "dvLicensePlate": "0",
+            "modelId": "1078",
+            "version": "2.0 ACTIVE L3 8P BLUEHDI 180 AT DIESEL",
+            "mileage": 134959,
+            "color": "GRIS PLATINUM",
+            "year": 2020,
+            "codeSii": null,
+            "vinNumber": "VF3VEAHXHLZ004272",
+            "engineNumber": "10DY2V4037552",
+            "engine": "2000",
+            "fuel": "DIESEL",
+            "transmission": "MECANICA",
+            "doors": 5,
+            "urlImage": "",
+            "model": {
+                "id": "1078",
+                "name": "TRAVELLER",
+                "typeVehicle": {
+                    "name": "MINIBUS"
+                },
+                "brand": {
+                    "name": "PEUGEOT"
+                }
+            },
+            "monthRT": "Abril"
+        }
+    }
+}

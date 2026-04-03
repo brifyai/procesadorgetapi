@@ -403,6 +403,7 @@ async function startProcessor() {
   const claimEnabled = !(claimEnabledRaw === '0' || claimEnabledRaw === 'false' || claimEnabledRaw === 'no' || claimEnabledRaw === 'off');
   const queueMax = clamp(parseEnvInt('PROCESSOR_QUEUE_MAX', batchSize * concurrency * 4), batchSize, 2000);
   const refillMin = clamp(parseEnvInt('PROCESSOR_QUEUE_REFILL_MIN', batchSize * concurrency), 1, queueMax);
+  const rateWindowMs = clamp(parseEnvInt('PROCESSOR_RATE_WINDOW_MS', 60000), 5000, 3600000);
 
   logAt(logLevel, 'info', 'Procesador GetAPI iniciado', {
     collection,
@@ -422,6 +423,8 @@ async function startProcessor() {
   let lastIdleLogAt = 0;
   let lastBackoffLoggedUntil = 0;
   const counters = { processed: 0, ok: 0, rate_limited: 0, error: 0, not_found: 0, invalid_plate: 0 };
+  let rateLastAt = Date.now();
+  let rateLastCounters = { ...counters };
 
   const queue = [];
   const queuedIds = new Set();
@@ -506,8 +509,42 @@ async function startProcessor() {
     while (true) {
       const now = Date.now();
       if (heartbeatMs > 0 && now - lastHeartbeatAt >= heartbeatMs) {
+        const elapsedMs = Math.max(1, now - rateLastAt);
+        const dt = elapsedMs / 1000;
+        const window = Math.max(1, rateWindowMs / 1000);
+        const current = { ...counters };
+        const delta = {
+          processed: current.processed - (rateLastCounters.processed || 0),
+          ok: current.ok - (rateLastCounters.ok || 0),
+          not_found: current.not_found - (rateLastCounters.not_found || 0),
+          error: current.error - (rateLastCounters.error || 0),
+          rate_limited: current.rate_limited - (rateLastCounters.rate_limited || 0),
+          invalid_plate: current.invalid_plate - (rateLastCounters.invalid_plate || 0)
+        };
+        const perMin = (n) => Math.round((Number(n || 0) * 60 * 100) / dt) / 100;
+        const efficiency = callsPerMinute > 0
+          ? Math.round(((perMin(delta.processed) * 2) / callsPerMinute) * 1000) / 10
+          : null;
+
         lastHeartbeatAt = now;
         logAt(logLevel, 'info', 'Heartbeat', { ...counters, queue: queue.length, inflight: inFlightIds.size });
+        logAt(logLevel, 'info', 'Resumen', {
+          window_s: Math.round(dt),
+          per_min: {
+            processed: perMin(delta.processed),
+            ok: perMin(delta.ok),
+            not_found: perMin(delta.not_found),
+            error: perMin(delta.error),
+            rate_limited: perMin(delta.rate_limited),
+            invalid_plate: perMin(delta.invalid_plate)
+          },
+          efficiency_pct: efficiency
+        });
+
+        if (elapsedMs >= rateWindowMs) {
+          rateLastAt = now;
+          rateLastCounters = current;
+        }
       }
 
       await waitGlobalBackoff();

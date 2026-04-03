@@ -13,6 +13,26 @@ function clamp(n, min, max) {
   return Math.min(max, Math.max(min, n));
 }
 
+function getLogLevel() {
+  const raw = String(process.env.PROCESSOR_LOG_LEVEL ?? 'info').trim().toLowerCase();
+  const levels = { error: 0, warn: 1, info: 2, debug: 3 };
+  if (raw in levels) return levels[raw];
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) ? clamp(n, 0, 3) : levels.info;
+}
+
+function logAt(currentLevel, level, message, meta) {
+  const levels = { error: 0, warn: 1, info: 2, debug: 3 };
+  const rank = level in levels ? levels[level] : levels.info;
+  if (rank > currentLevel) return;
+  const base = `[${new Date().toISOString()}] ${String(level).toUpperCase()} ${message}`;
+  const extra = meta && typeof meta === 'object' ? ` ${JSON.stringify(meta)}` : '';
+  const line = `${base}${extra}`;
+  if (rank <= 0) console.error(line);
+  else if (rank === 1) console.warn(line);
+  else console.log(line);
+}
+
 function normalizePlate(raw) {
   const plate = String(raw ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
   return plate;
@@ -337,39 +357,122 @@ async function startProcessor() {
 
   await directus.resolveGetApiSchema();
 
+  const logLevel = getLogLevel();
   const callsPerMinute = parseEnvInt('GETAPI_MAX_CALLS_PER_MIN', 25);
   const limiter = new CallSpacer({ callsPerMinute });
   const batchSize = parseEnvInt('PROCESSOR_BATCH_SIZE', 10);
   const idleWaitMs = parseEnvInt('PROCESSOR_IDLE_WAIT_MS', 10000);
   const loopWaitMs = parseEnvInt('PROCESSOR_LOOP_WAIT_MS', 50);
+  const heartbeatMs = parseEnvInt('PROCESSOR_HEARTBEAT_MS', 30000);
+  const idleLogMs = parseEnvInt('PROCESSOR_IDLE_LOG_MS', 60000);
 
-  console.log(`Procesador GetAPI iniciado · Colección: ${collection} · Directus: ${baseUrl}`);
+  logAt(logLevel, 'info', 'Procesador GetAPI iniciado', {
+    collection,
+    directus: baseUrl,
+    calls_per_min: callsPerMinute,
+    batch_size: batchSize,
+    idle_wait_ms: idleWaitMs,
+    loop_wait_ms: loopWaitMs
+  });
 
   let globalBackoffUntil = 0;
+  let lastHeartbeatAt = 0;
+  let lastIdleLogAt = 0;
+  let lastBackoffLoggedUntil = 0;
+  const counters = { processed: 0, ok: 0, rate_limited: 0, error: 0, not_found: 0, invalid_plate: 0 };
 
   while (true) {
     const now = Date.now();
+    if (heartbeatMs > 0 && now - lastHeartbeatAt >= heartbeatMs) {
+      lastHeartbeatAt = now;
+      logAt(logLevel, 'info', 'Heartbeat', { ...counters });
+    }
     if (globalBackoffUntil > now) {
+      if (now >= lastBackoffLoggedUntil) {
+        lastBackoffLoggedUntil = now + Math.min(30000, globalBackoffUntil - now);
+        logAt(logLevel, 'warn', 'Backoff global activo por rate limit', {
+          until: new Date(globalBackoffUntil).toISOString(),
+          remaining_ms: globalBackoffUntil - now
+        });
+      }
       await sleep(Math.min(1000, globalBackoffUntil - now));
       continue;
     }
 
     const nowIso = new Date().toISOString();
-    let rows = await directus.listQueueByStatus('pending', { limit: batchSize, nowIso });
+    let rows = [];
     let source = 'pending';
+    try {
+      rows = await directus.listQueueByStatus('pending', { limit: batchSize, nowIso });
+      source = 'pending';
 
-    if (!rows || rows.length === 0) {
-      rows = await directus.listQueueByStatus('rate_limited', { limit: batchSize, nowIso });
-      source = 'rate_limited';
+      if (!rows || rows.length === 0) {
+        rows = await directus.listQueueByStatus('rate_limited', { limit: batchSize, nowIso });
+        source = 'rate_limited';
+      }
+    } catch (e) {
+      logAt(logLevel, 'error', 'Error consultando cola en Directus', { message: e?.message || String(e) });
+      await sleep(5000);
+      continue;
     }
 
     if (!rows || rows.length === 0) {
+      if (idleLogMs > 0 && now - lastIdleLogAt >= idleLogMs) {
+        lastIdleLogAt = now;
+        logAt(logLevel, 'info', 'Sin pendientes (idle)', { idle_wait_ms: idleWaitMs });
+      }
       await sleep(idleWaitMs);
       continue;
     }
 
+    logAt(logLevel, 'info', 'Batch obtenido', { source, rows: rows.length });
+
     for (const row of rows) {
-      const outcome = await processOneRow(row, { limiter });
+      const schema = await directus.resolveGetApiSchema();
+      const id = row?.[schema.idField];
+      const rawPlate = schema.plateField ? row?.[schema.plateField] : null;
+      const plate = normalizePlate(rawPlate);
+      const attempts = schema.attemptsField ? Number(row?.[schema.attemptsField] ?? 0) : 0;
+
+      logAt(logLevel, 'debug', 'Procesando registro', { id, plate, attempts, source });
+
+      let outcome = null;
+      try {
+        outcome = await processOneRow(row, { limiter });
+      } catch (e) {
+        const message = e?.message || String(e);
+        const backoffSeconds = computeBackoffSeconds({ attempts, baseSeconds: 60, maxSeconds: 3600 });
+        const nextRetryAt = new Date(Date.now() + backoffSeconds * 1000).toISOString();
+        const nowIso2 = new Date().toISOString();
+        const patch = {};
+        if (schema.statusField) patch[schema.statusField] = 'error';
+        if (schema.attemptsField) patch[schema.attemptsField] = attempts + 1;
+        if (schema.reasonField) patch[schema.reasonField] = 'processor_exception';
+        if (schema.messageField) patch[schema.messageField] = message;
+        if (schema.lastErrorAtField) patch[schema.lastErrorAtField] = nowIso2;
+        if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso2;
+        if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = nextRetryAt;
+        if (id) {
+          try {
+            await directus.patchRowById(id, patch);
+          } catch (e2) {
+            logAt(logLevel, 'error', 'No se pudo guardar error en Directus', { id, message: e2?.message || String(e2) });
+          }
+        }
+        outcome = { ok: false, status: 'error', plate, id, nextRetryAt, error: message };
+        logAt(logLevel, 'error', 'Excepción procesando registro', { id, plate, message });
+      }
+
+      counters.processed += 1;
+      if (outcome?.status && outcome.status in counters) counters[outcome.status] += 1;
+
+      logAt(logLevel, 'info', 'Resultado', {
+        id,
+        plate,
+        status: outcome?.status || null,
+        next_retry_at: outcome?.nextRetryAt || null
+      });
+
       if (outcome?.status === 'rate_limited' && outcome?.backoffSeconds) {
         globalBackoffUntil = Date.now() + clamp(outcome.backoffSeconds, 1, 3600) * 1000;
       }
@@ -383,4 +486,3 @@ async function startProcessor() {
 }
 
 module.exports = { startProcessor };
-

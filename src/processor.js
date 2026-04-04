@@ -149,9 +149,14 @@ async function fetchBytesWithTimeout(url, timeoutMs) {
   const ms = Number.isFinite(timeoutMs) ? timeoutMs : 20000;
   const id = setTimeout(() => controller.abort(), ms);
   try {
-    const res = await fetch(url, { signal: controller.signal });
+    let res;
+    try {
+      res = await fetch(url, { signal: controller.signal });
+    } catch {
+      return { ok: false, status: 0, contentType: '', bytes: Buffer.alloc(0) };
+    }
     const contentType = res.headers.get('content-type') || '';
-    const buf = Buffer.from(await res.arrayBuffer());
+    const buf = Buffer.from(await res.arrayBuffer().catch(() => new ArrayBuffer(0)));
     return { ok: res.ok, status: res.status, contentType, bytes: buf };
   } finally {
     clearTimeout(id);
@@ -166,11 +171,68 @@ function extractDirectusFileIdFromUrl(url) {
   return null;
 }
 
+function uniqueStrings(values) {
+  const out = [];
+  const seen = new Set();
+  for (const v of values || []) {
+    const s = String(v || '').trim();
+    if (!s) continue;
+    if (seen.has(s)) continue;
+    seen.add(s);
+    out.push(s);
+  }
+  return out;
+}
+
+function buildCandidateImageUrls(imageUrl) {
+  const raw = String(imageUrl || '').trim();
+  if (!raw) return [];
+  if (/^https?:\/\//i.test(raw)) return [raw];
+
+  const assetsBase = String(process.env.ASSETS_BASE_URL || process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+  const { baseUrl: directusBaseUrl } = directus.getDirectusConfig();
+  let origin = '';
+  try {
+    origin = directusBaseUrl ? new URL(directusBaseUrl).origin : '';
+  } catch {
+    origin = '';
+  }
+
+  const candidates = [];
+  if (raw.startsWith('/')) {
+    if (assetsBase) candidates.push(`${assetsBase}${raw}`);
+    if (origin) candidates.push(`${origin}${raw}`);
+    if (directusBaseUrl) candidates.push(`${directusBaseUrl}${raw}`);
+  } else {
+    if (assetsBase) candidates.push(`${assetsBase}/${raw}`);
+    if (origin) candidates.push(`${origin}/${raw}`);
+    if (directusBaseUrl) candidates.push(`${directusBaseUrl}/${raw}`);
+  }
+
+  const maybeId = raw.split('/').filter(Boolean).pop();
+  if (maybeId && origin) {
+    candidates.push(`${origin}/assets/${maybeId}`);
+  }
+  if (maybeId && directusBaseUrl) {
+    candidates.push(`${directusBaseUrl}/assets/${maybeId}`);
+  }
+
+  return uniqueStrings(candidates);
+}
+
 async function groqOcrPlateFromImageUrl(imageUrl) {
   const { apiKey, baseUrl, model } = getGroqConfig();
   if (!apiKey) return null;
-  const bytesRes = await fetchBytesWithTimeout(imageUrl, parseEnvInt('OCR_IMAGE_TIMEOUT_MS', 25000));
-  if (!bytesRes.ok || !bytesRes.bytes || bytesRes.bytes.length === 0) return null;
+
+  const urls = buildCandidateImageUrls(imageUrl);
+  if (urls.length === 0) return null;
+  let bytesRes = null;
+  for (const url of urls) {
+    bytesRes = await fetchBytesWithTimeout(url, parseEnvInt('OCR_IMAGE_TIMEOUT_MS', 25000));
+    if (bytesRes?.ok && bytesRes.bytes && bytesRes.bytes.length > 0) break;
+  }
+  if (!bytesRes?.ok || !bytesRes.bytes || bytesRes.bytes.length === 0) return null;
+
   const mime = bytesRes.contentType.includes('image/') ? bytesRes.contentType.split(';')[0].trim() : 'image/jpeg';
   const b64 = bytesRes.bytes.toString('base64');
   const dataUrl = `data:${mime};base64,${b64}`;
@@ -221,10 +283,11 @@ function normalizeDetectionId(value) {
   return String(value);
 }
 
-async function getApiGetPlateInfo(plate, { limiter, waitGlobalBackoff } = {}) {
+async function getApiGetPlateInfo(plate, { limiter, waitGlobalBackoff, markCall } = {}) {
   const { apiKey, baseUrl } = getGetApiConfig();
   if (typeof waitGlobalBackoff === 'function') await waitGlobalBackoff();
   await limiter.waitTurn();
+  if (typeof markCall === 'function') markCall();
   const url = `${baseUrl}/v1/vehicles/plate/${encodeURIComponent(plate)}`;
   const { res, data } = await fetchJsonWithTimeout(url, {
     headers: {
@@ -236,10 +299,11 @@ async function getApiGetPlateInfo(plate, { limiter, waitGlobalBackoff } = {}) {
   return { status: res.status, ok: res.ok, data, res };
 }
 
-async function getApiGetAppraisal(plate, { limiter, waitGlobalBackoff } = {}) {
+async function getApiGetAppraisal(plate, { limiter, waitGlobalBackoff, markCall } = {}) {
   const { apiKey, baseUrl } = getGetApiConfig();
   if (typeof waitGlobalBackoff === 'function') await waitGlobalBackoff();
   await limiter.waitTurn();
+  if (typeof markCall === 'function') markCall();
   const url = `${baseUrl}/v1/vehicles/appraisal/${encodeURIComponent(plate)}`;
   const { res, data } = await fetchJsonWithTimeout(url, {
     headers: {
@@ -251,7 +315,7 @@ async function getApiGetAppraisal(plate, { limiter, waitGlobalBackoff } = {}) {
   return { status: res.status, ok: res.ok, data, res };
 }
 
-async function processOneRow(row, { limiter, schema, waitGlobalBackoff } = {}) {
+async function processOneRow(row, { limiter, schema, waitGlobalBackoff, markCall } = {}) {
   const resolvedSchema = schema || await directus.resolveGetApiSchema();
   const schemaRef = resolvedSchema;
   const id = row?.[schemaRef.idField];
@@ -277,11 +341,11 @@ async function processOneRow(row, { limiter, schema, waitGlobalBackoff } = {}) {
     return { ok: true, status: 'invalid_plate', detectionId, plate };
   }
 
-  let plateRes = await getApiGetPlateInfo(plate, { limiter, waitGlobalBackoff });
+  let plateRes = await getApiGetPlateInfo(plate, { limiter, waitGlobalBackoff, markCall });
   if (plateRes.status === 404) {
     const padded = maybePadMotorcyclePlate(plate);
     if (padded && padded !== plate) {
-      const alt = await getApiGetPlateInfo(padded, { limiter, waitGlobalBackoff });
+      const alt = await getApiGetPlateInfo(padded, { limiter, waitGlobalBackoff, markCall });
       if (alt.ok) {
         plate = padded;
         plateRes = alt;
@@ -369,7 +433,7 @@ async function processOneRow(row, { limiter, schema, waitGlobalBackoff } = {}) {
     return { ok: true, status: 'error', detectionId, plate, nextRetryAt };
   }
 
-  const appraisalRes = await getApiGetAppraisal(plate, { limiter, waitGlobalBackoff });
+  const appraisalRes = await getApiGetAppraisal(plate, { limiter, waitGlobalBackoff, markCall });
   if (appraisalRes.status === 429) {
     const retryAfter = extractRetryAfterSeconds(appraisalRes.res);
     const backoffSeconds = retryAfter ?? computeBackoffSeconds({ attempts, baseSeconds: 30, maxSeconds: 3600 });
@@ -520,7 +584,7 @@ async function startProcessor() {
   let lastHeartbeatAt = 0;
   let lastIdleLogAt = 0;
   let lastBackoffLoggedUntil = 0;
-  const counters = { processed: 0, ok: 0, rate_limited: 0, error: 0, not_found: 0, invalid_plate: 0 };
+  const counters = { processed: 0, ok: 0, rate_limited: 0, error: 0, not_found: 0, invalid_plate: 0, calls: 0 };
   let rateLastAt = Date.now();
   let rateLastCounters = { ...counters };
 
@@ -632,14 +696,13 @@ async function startProcessor() {
           not_found: current.not_found - (rateLastCounters.not_found || 0),
           error: current.error - (rateLastCounters.error || 0),
           rate_limited: current.rate_limited - (rateLastCounters.rate_limited || 0),
-          invalid_plate: current.invalid_plate - (rateLastCounters.invalid_plate || 0)
+          invalid_plate: current.invalid_plate - (rateLastCounters.invalid_plate || 0),
+          calls: current.calls - (rateLastCounters.calls || 0)
         };
         const perMin = (n) => Math.round((Number(n || 0) * 60 * 100) / dt) / 100;
         const processedPerMin = perMin(delta.processed);
-        const callsPerMinMin = perMin((delta.ok * 2) + Math.max(0, delta.processed - delta.ok));
-        const callsPerMinMax = perMin(delta.processed * 2);
-        const efficiencyMin = callsPerMinute > 0 ? Math.round((callsPerMinMin / callsPerMinute) * 1000) / 10 : null;
-        const efficiencyMax = callsPerMinute > 0 ? Math.round((callsPerMinMax / callsPerMinute) * 1000) / 10 : null;
+        const callsPerMinReal = perMin(delta.calls);
+        const efficiencyReal = callsPerMinute > 0 ? Math.round((callsPerMinReal / callsPerMinute) * 1000) / 10 : null;
 
         lastHeartbeatAt = now;
         logAt(logLevel, 'info', 'Heartbeat', { ...counters, queue: queue.length, inflight: inFlightIds.size });
@@ -653,8 +716,8 @@ async function startProcessor() {
             rate_limited: perMin(delta.rate_limited),
             invalid_plate: perMin(delta.invalid_plate)
           },
-          calls_per_min_est: { min: callsPerMinMin, max: callsPerMinMax },
-          efficiency_pct_est: { min: efficiencyMin, max: efficiencyMax }
+          calls_per_min: callsPerMinReal,
+          efficiency_pct: efficiencyReal
         });
 
         if (elapsedMs >= rateWindowMs) {
@@ -685,6 +748,9 @@ async function startProcessor() {
 
       let outcome = null;
       try {
+        const markCall = () => {
+          counters.calls += 1;
+        };
         if (source === 'error_invalid_plate' && enableOcrFix && getGroqConfig().apiKey) {
           const detectionsCollection = directus.getDetectionsCollection();
           let detection = null;
@@ -723,7 +789,7 @@ async function startProcessor() {
             }
             const row2 = { ...(row || {}) };
             row2[schema.plateField] = candidate;
-            outcome = await processOneRow(row2, { limiter, schema, waitGlobalBackoff });
+            outcome = await processOneRow(row2, { limiter, schema, waitGlobalBackoff, markCall });
           } else if (enableDeletion && detId) {
             const detectionsCollection = directus.getDetectionsCollection();
             const fileId = extractDirectusFileIdFromUrl(imageUrl);
@@ -743,10 +809,10 @@ async function startProcessor() {
             }
             outcome = { ok: true, status: 'deleted', detectionId: detId, plate };
           } else {
-            outcome = await processOneRow(row, { limiter, schema, waitGlobalBackoff });
+            outcome = await processOneRow(row, { limiter, schema, waitGlobalBackoff, markCall });
           }
         } else {
-        outcome = await processOneRow(row, { limiter, schema, waitGlobalBackoff });
+          outcome = await processOneRow(row, { limiter, schema, waitGlobalBackoff, markCall });
         }
       } catch (e) {
         const message = e?.message || String(e);

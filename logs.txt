@@ -1,296 +1,119 @@
-[2026-04-03T04:48:07.495Z] INFO Resultado {"id":37533,"plate":"SXTR43","status":"ok","next_retry_at":null}
-[2026-04-03T04:48:12.227Z] INFO Resultado {"id":37534,"plate":"LGRB83","status":"ok","next_retry_at":null}
-[2026-04-03T04:48:20.776Z] INFO Resultado {"id":37535,"plate":"JDRF61","status":"ok","next_retry_at":null}
-[2026-04-03T04:48:27.277Z] INFO Resultado {"id":37536,"plate":"RZYV78","status":"ok","next_retry_at":null}
-[2026-04-03T04:48:32.724Z] INFO Resultado {"id":37537,"plate":"KVVT71","status":"ok","next_retry_at":null}
-[2026-04-03T04:48:35.309Z] INFO Resultado {"id":37538,"plate":"KBWS65","status":"ok","next_retry_at":null}
-[2026-04-03T04:48:40.137Z] INFO Resultado {"id":37539,"plate":"KPZB83","status":"ok","next_retry_at":null}
-[2026-04-03T04:48:40.188Z] INFO Heartbeat {"processed":190,"ok":177,"rate_limited":0,"error":0,"not_found":13,"invalid_plate":0}
-[2026-04-03T04:48:40.204Z] INFO Batch obtenido {"source":"pending","rows":10}
-[2026-04-03T04:48:44.912Z] INFO Resultado {"id":37530,"plate":"WU4078","status":"ok","next_retry_at":null}
-[2026-04-03T04:48:49.722Z] INFO Resultado {"id":37531,"plate":"KGVL76","status":"ok","next_retry_at":null}
-[2026-04-03T04:48:54.522Z] INFO Resultado {"id":37532,"plate":"VFPG48","status":"not_found","next_retry_at":null}
-[2026-04-03T04:48:59.320Z] INFO Resultado {"id":37533,"plate":"SXTR43","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:04.131Z] INFO Resultado {"id":37534,"plate":"LGRB83","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:08.928Z] INFO Resultado {"id":37535,"plate":"JDRF61","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:13.731Z] INFO Resultado {"id":37536,"plate":"RZYV78","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:18.533Z] INFO Resultado {"id":37537,"plate":"KVVT71","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:23.330Z] INFO Resultado {"id":37538,"plate":"KBWS65","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:28.210Z] INFO Resultado {"id":37539,"plate":"KPZB83","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:28.261Z] INFO Heartbeat {"processed":200,"ok":186,"rate_limited":0,"error":0,"not_found":14,"invalid_plate":0}
-[2026-04-03T04:49:28.277Z] INFO Batch obtenido {"source":"pending","rows":10}
-[2026-04-03T04:49:32.937Z] INFO Resultado {"id":37530,"plate":"WU4078","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:37.817Z] INFO Resultado {"id":37531,"plate":"KGVL76","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:42.544Z] INFO Resultado {"id":37532,"plate":"VFPG48","status":"not_found","next_retry_at":null}
-[2026-04-03T04:49:47.350Z] INFO Resultado {"id":37533,"plate":"SXTR43","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:52.144Z] INFO Resultado {"id":37534,"plate":"LGRB83","status":"ok","next_retry_at":null}
-[2026-04-03T04:49:57.167Z] INFO Resultado {"id":37535,"plate":"JDRF61","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:01.774Z] INFO Resultado {"id":37536,"plate":"RZYV78","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:06.759Z] INFO Resultado {"id":37537,"plate":"KVVT71","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:11.514Z] INFO Resultado {"id":37538,"plate":"KBWS65","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:16.152Z] INFO Resultado {"id":37539,"plate":"KPZB83","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:16.202Z] INFO Heartbeat {"processed":210,"ok":195,"rate_limited":0,"error":0,"not_found":15,"invalid_plate":0}
-[2026-04-03T04:50:16.223Z] INFO Batch obtenido {"source":"pending","rows":10}
-[2026-04-03T04:50:20.947Z] INFO Resultado {"id":37530,"plate":"WU4078","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:25.758Z] INFO Resultado {"id":37531,"plate":"KGVL76","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:30.561Z] INFO Resultado {"id":37532,"plate":"VFPG48","status":"not_found","next_retry_at":null}
-[2026-04-03T04:50:35.361Z] INFO Resultado {"id":37533,"plate":"SXTR43","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:40.165Z] INFO Resultado {"id":37534,"plate":"LGRB83","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:45.030Z] INFO Resultado {"id":37535,"plate":"JDRF61","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:49.820Z] INFO Resultado {"id":37536,"plate":"RZYV78","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:54.585Z] INFO Resultado {"id":37537,"plate":"KVVT71","status":"ok","next_retry_at":null}
-[2026-04-03T04:50:59.371Z] INFO Resultado {"id":37538,"plate":"KBWS65","status":"ok","next_retry_at":null}
-[2026-04-03T04:51:04.176Z] INFO Resultado {"id":37539,"plate":"KPZB83","status":"ok","next_retry_at":null}
-[2026-04-03T04:51:04.227Z] INFO Heartbeat {"processed":220,"ok":204,"rate_limited":0,"error":0,"not_found":16,"invalid_plate":0}
-[2026-04-03T04:51:04.245Z] INFO Batch obtenido {"source":"pending","rows":10}
-[2026-04-03T04:51:08.976Z] INFO Resultado {"id":37530,"plate":"WU4078","status":"ok","next_retry_at":null}
-[2026-04-03T14:41:16.801Z] INFO Procesador GetAPI iniciado {"collection":"vehicle_detection_getapi2","directus":"https://pedro-valdivia-cam1-directus.inslyw.easypanel.host","calls_per_min":25,"batch_size":10,"idle_wait_ms":10000,"loop_wait_ms":0,"concurrency":6,"claim_lock":true,"lock_ms":180000,"queue_max":240}
-[2026-04-03T14:41:16.804Z] INFO Heartbeat {"processed":0,"ok":0,"rate_limited":0,"error":0,"not_found":0,"invalid_plate":0,"queue":0,"inflight":0}
-[2026-04-03T14:41:16.815Z] INFO Sin pendientes (idle) {"idle_wait_ms":10000}
-[2026-04-03T14:41:16.845Z] INFO Cola recargada {"added":60,"queue":60,"source":"pending"}
-[2026-04-03T14:41:16.881Z] DEBUG Procesando registro {"worker":1,"id":38660,"plate":"SRTK28","attempts":0,"source":"pending","queue":57}
-[2026-04-03T14:41:16.894Z] DEBUG Procesando registro {"worker":5,"id":38661,"plate":"WT1705","attempts":0,"source":"pending","queue":57}
-[2026-04-03T14:41:16.911Z] DEBUG Procesando registro {"worker":6,"id":38662,"plate":"MHSY76","attempts":0,"source":"pending","queue":57}
-[2026-04-03T14:41:17.214Z] INFO Resultado {"worker":1,"id":38660,"plate":"SRTK28","status":"rate_limited","next_retry_at":"2026-04-03T14:41:54.183Z"}
-[2026-04-03T14:41:17.215Z] WARN Backoff global activo por rate limit {"until":"2026-04-03T14:41:54.215Z","remaining_ms":37000}
-[2026-04-03T14:41:21.822Z] INFO Resultado {"worker":6,"id":38662,"plate":"MHSY76","status":"error","next_retry_at":"2026-04-03T14:42:21.785Z"}
-[2026-04-03T14:41:26.871Z] DEBUG Procesando registro {"worker":3,"id":38663,"plate":"YC7384","attempts":0,"source":"pending","queue":55}
-[2026-04-03T14:41:26.886Z] DEBUG Procesando registro {"worker":4,"id":38664,"plate":"SXJP91","attempts":0,"source":"pending","queue":55}
-[2026-04-03T14:41:26.902Z] INFO Cola recargada {"added":5,"queue":60,"source":"pending"}
-[2026-04-03T14:41:26.933Z] DEBUG Procesando registro {"worker":2,"id":38665,"plate":"PSFF85","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:41:47.237Z] WARN Backoff global activo por rate limit {"until":"2026-04-03T14:41:54.215Z","remaining_ms":6978}
-[2026-04-03T14:41:54.267Z] INFO Cola recargada {"added":1,"queue":59,"source":"pending"}
-[2026-04-03T14:41:54.273Z] DEBUG Procesando registro {"worker":1,"id":38666,"plate":"GYKC66","attempts":0,"source":"pending","queue":58}
-[2026-04-03T14:41:54.301Z] DEBUG Procesando registro {"worker":6,"id":38667,"plate":"SWYY62","attempts":0,"source":"pending","queue":58}
-[2026-04-03T14:41:54.591Z] INFO Resultado {"worker":5,"id":38661,"plate":"WT1705","status":"ok","next_retry_at":null}
-[2026-04-03T14:41:54.591Z] INFO Heartbeat {"processed":3,"ok":1,"rate_limited":1,"error":1,"not_found":0,"invalid_plate":0,"queue":58,"inflight":5}
-[2026-04-03T14:41:54.620Z] INFO Cola recargada {"added":2,"queue":60,"source":"pending"}
-[2026-04-03T14:41:54.644Z] DEBUG Procesando registro {"worker":5,"id":38668,"plate":"SVPW29","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:13.896Z] INFO Resultado {"worker":4,"id":38664,"plate":"SXJP91","status":"ok","next_retry_at":null}
-[2026-04-03T14:42:13.935Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:13.963Z] DEBUG Procesando registro {"worker":4,"id":38669,"plate":"JWDR70","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:16.425Z] INFO Resultado {"worker":3,"id":38663,"plate":"YC7384","status":"ok","next_retry_at":null}
-[2026-04-03T14:42:16.466Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:16.519Z] DEBUG Procesando registro {"worker":3,"id":38670,"plate":"HGDB94","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:18.380Z] INFO Resultado {"worker":1,"id":38666,"plate":"GYKC66","status":"ok","next_retry_at":null}
-[2026-04-03T14:42:18.413Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:18.438Z] DEBUG Procesando registro {"worker":1,"id":38671,"plate":"JZPS77","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:20.119Z] INFO Resultado {"worker":2,"id":38665,"plate":"PSFF85","status":"ok","next_retry_at":null}
-[2026-04-03T14:42:20.154Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:20.182Z] DEBUG Procesando registro {"worker":2,"id":38672,"plate":"ZU2052","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:23.548Z] INFO Resultado {"worker":6,"id":38667,"plate":"SWYY62","status":"ok","next_retry_at":null}
-[2026-04-03T14:42:23.577Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:23.610Z] DEBUG Procesando registro {"worker":6,"id":38673,"plate":"KXHT83","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:26.096Z] INFO Resultado {"worker":5,"id":38668,"plate":"SVPW29","status":"ok","next_retry_at":null}
-[2026-04-03T14:42:26.096Z] INFO Heartbeat {"processed":9,"ok":7,"rate_limited":1,"error":1,"not_found":0,"invalid_plate":0,"queue":59,"inflight":5}
-[2026-04-03T14:42:26.129Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:26.164Z] DEBUG Procesando registro {"worker":5,"id":38674,"plate":"VFKV61","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:44.206Z] INFO Resultado {"worker":4,"id":38669,"plate":"JWDR70","status":"ok","next_retry_at":null}
-[2026-04-03T14:42:44.254Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:44.291Z] DEBUG Procesando registro {"worker":4,"id":38675,"plate":"VDYX17","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:46.801Z] INFO Resultado {"worker":3,"id":38670,"plate":"HGDB94","status":"ok","next_retry_at":null}
-[2026-04-03T14:42:46.832Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:46.859Z] DEBUG Procesando registro {"worker":3,"id":38676,"plate":"VGRD93","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:47.277Z] INFO Resultado {"worker":1,"id":38671,"plate":"JZPS77","status":"ok","next_retry_at":null}
-[2026-04-03T14:42:47.321Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:47.353Z] DEBUG Procesando registro {"worker":1,"id":38677,"plate":"KDBX76","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:51.515Z] INFO Resultado {"worker":2,"id":38672,"plate":"ZU2052","status":"ok","next_retry_at":null}
-[2026-04-03T14:42:51.576Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:51.621Z] DEBUG Procesando registro {"worker":2,"id":38678,"plate":"GSDR73","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:42:54.283Z] INFO Resultado {"worker":5,"id":38674,"plate":"VFKV61","status":"not_found","next_retry_at":null}
-[2026-04-03T14:42:54.315Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:42:54.358Z] DEBUG Procesando registro {"worker":5,"id":38679,"plate":"VVJK53","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:06.403Z] INFO Resultado {"worker":4,"id":38675,"plate":"VDYX17","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:06.403Z] INFO Heartbeat {"processed":15,"ok":12,"rate_limited":1,"error":1,"not_found":1,"invalid_plate":0,"queue":59,"inflight":5}
-[2026-04-03T14:43:06.458Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:06.497Z] DEBUG Procesando registro {"worker":4,"id":38680,"plate":"PYZH66","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:07.622Z] INFO Resultado {"worker":6,"id":38673,"plate":"KXHT83","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:07.646Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:07.672Z] DEBUG Procesando registro {"worker":6,"id":38681,"plate":"RVVY47","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:12.937Z] INFO Resultado {"worker":3,"id":38676,"plate":"VGRD93","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:12.983Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:13.016Z] DEBUG Procesando registro {"worker":3,"id":38682,"plate":"TBPX97","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:14.416Z] INFO Resultado {"worker":1,"id":38677,"plate":"KDBX76","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:14.449Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:14.482Z] DEBUG Procesando registro {"worker":1,"id":38683,"plate":"RYHT59","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:15.984Z] INFO Resultado {"worker":5,"id":38679,"plate":"VVJK53","status":"not_found","next_retry_at":null}
-[2026-04-03T14:43:16.012Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:16.039Z] DEBUG Procesando registro {"worker":5,"id":38684,"plate":"TKCP89","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:18.944Z] INFO Resultado {"worker":2,"id":38678,"plate":"GSDR73","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:18.976Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:19.009Z] DEBUG Procesando registro {"worker":2,"id":38685,"plate":"LLRG19","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:30.441Z] INFO Resultado {"worker":4,"id":38680,"plate":"PYZH66","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:30.563Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:30.589Z] DEBUG Procesando registro {"worker":4,"id":38686,"plate":"SGSB38","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:37.849Z] INFO Resultado {"worker":3,"id":38682,"plate":"TBPX97","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:37.850Z] INFO Heartbeat {"processed":22,"ok":18,"rate_limited":1,"error":1,"not_found":2,"invalid_plate":0,"queue":59,"inflight":5}
-[2026-04-03T14:43:37.893Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:37.916Z] DEBUG Procesando registro {"worker":3,"id":38687,"plate":"PRXH99","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:39.444Z] INFO Resultado {"worker":6,"id":38681,"plate":"RVVY47","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:39.474Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:39.505Z] DEBUG Procesando registro {"worker":6,"id":38688,"plate":"BJTX92","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:42.698Z] INFO Resultado {"worker":1,"id":38683,"plate":"RYHT59","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:42.722Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:42.749Z] DEBUG Procesando registro {"worker":1,"id":38689,"plate":"RKSB39","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:45.522Z] INFO Resultado {"worker":5,"id":38684,"plate":"TKCP89","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:45.546Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:45.569Z] DEBUG Procesando registro {"worker":5,"id":38690,"plate":"HRZZ89","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:43:49.910Z] INFO Resultado {"worker":2,"id":38685,"plate":"LLRG19","status":"ok","next_retry_at":null}
-[2026-04-03T14:43:49.947Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:43:49.970Z] DEBUG Procesando registro {"worker":2,"id":38691,"plate":"VDCV76","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:03.379Z] INFO Resultado {"worker":4,"id":38686,"plate":"SGSB38","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:03.411Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:03.447Z] DEBUG Procesando registro {"worker":4,"id":38692,"plate":"RJFD46","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:07.883Z] INFO Resultado {"worker":3,"id":38687,"plate":"PRXH99","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:07.883Z] INFO Heartbeat {"processed":28,"ok":24,"rate_limited":1,"error":1,"not_found":2,"invalid_plate":0,"queue":59,"inflight":5}
-[2026-04-03T14:44:07.925Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:07.949Z] DEBUG Procesando registro {"worker":3,"id":38693,"plate":"VSRV13","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:10.567Z] INFO Resultado {"worker":6,"id":38688,"plate":"BJTX92","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:10.590Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:10.617Z] DEBUG Procesando registro {"worker":6,"id":38694,"plate":"RSLD38","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:11.221Z] INFO Resultado {"worker":5,"id":38690,"plate":"HRZZ89","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:11.250Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:11.278Z] DEBUG Procesando registro {"worker":5,"id":38695,"plate":"PKRC49","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:12.695Z] INFO Resultado {"worker":1,"id":38689,"plate":"RKSB39","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:12.729Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:12.758Z] DEBUG Procesando registro {"worker":1,"id":38696,"plate":"SKTS63","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:17.818Z] INFO Resultado {"worker":2,"id":38691,"plate":"VDCV76","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:17.853Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:17.880Z] DEBUG Procesando registro {"worker":2,"id":38697,"plate":"LHRD19","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:32.138Z] INFO Resultado {"worker":4,"id":38692,"plate":"RJFD46","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:32.220Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:32.261Z] DEBUG Procesando registro {"worker":4,"id":38698,"plate":"KYBZ99","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:32.826Z] INFO Resultado {"worker":3,"id":38693,"plate":"VSRV13","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:32.852Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:32.874Z] DEBUG Procesando registro {"worker":3,"id":38699,"plate":"SWDH99","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:40.850Z] INFO Resultado {"worker":5,"id":38695,"plate":"PKRC49","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:40.850Z] INFO Heartbeat {"processed":35,"ok":31,"rate_limited":1,"error":1,"not_found":2,"invalid_plate":0,"queue":59,"inflight":5}
-[2026-04-03T14:44:40.899Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:40.931Z] DEBUG Procesando registro {"worker":5,"id":38700,"plate":"SJPT19","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:41.186Z] INFO Resultado {"worker":6,"id":38694,"plate":"RSLD38","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:41.218Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:41.248Z] DEBUG Procesando registro {"worker":6,"id":38701,"plate":"LXVH89","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:43.117Z] INFO Resultado {"worker":1,"id":38696,"plate":"SKTS63","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:43.152Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:43.192Z] DEBUG Procesando registro {"worker":1,"id":38702,"plate":"KDCS28","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:44:45.161Z] INFO Resultado {"worker":2,"id":38697,"plate":"LHRD19","status":"ok","next_retry_at":null}
-[2026-04-03T14:44:45.184Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:44:45.208Z] DEBUG Procesando registro {"worker":2,"id":38703,"plate":"PCGC27","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:03.571Z] INFO Resultado {"worker":4,"id":38698,"plate":"KYBZ99","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:03.618Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:03.654Z] DEBUG Procesando registro {"worker":4,"id":38704,"plate":"PSCF73","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:05.430Z] INFO Resultado {"worker":3,"id":38699,"plate":"SWDH99","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:05.464Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:05.491Z] DEBUG Procesando registro {"worker":3,"id":38705,"plate":"TDTD20","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:07.173Z] INFO Resultado {"worker":5,"id":38700,"plate":"SJPT19","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:07.204Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:07.241Z] DEBUG Procesando registro {"worker":5,"id":38706,"plate":"LTTK38","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:09.437Z] INFO Resultado {"worker":6,"id":38701,"plate":"LXVH89","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:09.473Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:09.507Z] DEBUG Procesando registro {"worker":6,"id":38707,"plate":"GTBP86","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:12.797Z] INFO Resultado {"worker":1,"id":38702,"plate":"KDCS28","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:12.797Z] INFO Heartbeat {"processed":43,"ok":39,"rate_limited":1,"error":1,"not_found":2,"invalid_plate":0,"queue":59,"inflight":5}
-[2026-04-03T14:45:12.822Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:12.854Z] DEBUG Procesando registro {"worker":1,"id":38708,"plate":"SVDD60","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:14.007Z] INFO Resultado {"worker":2,"id":38703,"plate":"PCGC27","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:14.038Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:14.060Z] DEBUG Procesando registro {"worker":2,"id":38709,"plate":"PPBX15","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:32.266Z] INFO Resultado {"worker":3,"id":38705,"plate":"TDTD20","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:32.305Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:32.342Z] DEBUG Procesando registro {"worker":3,"id":38710,"plate":"TVBB76","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:36.697Z] INFO Resultado {"worker":5,"id":38706,"plate":"LTTK38","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:36.781Z] INFO Resultado {"worker":4,"id":38704,"plate":"PSCF73","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:36.790Z] INFO Cola recargada {"added":1,"queue":59,"source":"pending"}
-[2026-04-03T14:45:36.857Z] DEBUG Procesando registro {"worker":5,"id":38712,"plate":"SVYD97","attempts":0,"source":"pending","queue":58}
-[2026-04-03T14:45:36.877Z] DEBUG Procesando registro {"worker":4,"id":38711,"plate":"TKYL50","attempts":0,"source":"pending","queue":58}
-[2026-04-03T14:45:39.574Z] INFO Resultado {"worker":6,"id":38707,"plate":"GTBP86","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:39.608Z] INFO Cola recargada {"added":2,"queue":60,"source":"pending"}
-[2026-04-03T14:45:39.640Z] DEBUG Procesando registro {"worker":6,"id":38713,"plate":"LDRF89","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:43.932Z] INFO Resultado {"worker":2,"id":38709,"plate":"PPBX15","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:43.932Z] INFO Heartbeat {"processed":49,"ok":45,"rate_limited":1,"error":1,"not_found":2,"invalid_plate":0,"queue":59,"inflight":5}
-[2026-04-03T14:45:43.975Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:44.009Z] DEBUG Procesando registro {"worker":2,"id":38714,"plate":"TFRX92","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:52.446Z] INFO Resultado {"worker":1,"id":38708,"plate":"SVDD60","status":"not_found","next_retry_at":null}
-[2026-04-03T14:45:52.528Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:52.557Z] DEBUG Procesando registro {"worker":1,"id":38715,"plate":"TDZV87","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:56.083Z] INFO Resultado {"worker":3,"id":38710,"plate":"TVBB76","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:56.116Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:56.152Z] DEBUG Procesando registro {"worker":3,"id":38716,"plate":"TO6094","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:45:59.269Z] INFO Resultado {"worker":4,"id":38711,"plate":"TKYL50","status":"ok","next_retry_at":null}
-[2026-04-03T14:45:59.298Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:45:59.326Z] DEBUG Procesando registro {"worker":4,"id":38717,"plate":"TKJG99","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:00.686Z] INFO Resultado {"worker":5,"id":38712,"plate":"SVYD97","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:00.726Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:00.763Z] DEBUG Procesando registro {"worker":5,"id":38718,"plate":"RSRD93","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:01.687Z] INFO Resultado {"worker":6,"id":38713,"plate":"LDRF89","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:01.719Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:01.759Z] DEBUG Procesando registro {"worker":6,"id":38719,"plate":"PGPK88","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:09.604Z] INFO Resultado {"worker":2,"id":38714,"plate":"TFRX92","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:09.638Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:09.670Z] DEBUG Procesando registro {"worker":2,"id":38720,"plate":"JKTT21","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:09.849Z] INFO Resultado {"worker":3,"id":38716,"plate":"TO6094","status":"not_found","next_retry_at":null}
-[2026-04-03T14:46:09.871Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:09.895Z] DEBUG Procesando registro {"worker":3,"id":38721,"plate":"PFTW45","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:21.479Z] INFO Resultado {"worker":1,"id":38715,"plate":"TDZV87","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:21.479Z] INFO Heartbeat {"processed":57,"ok":51,"rate_limited":1,"error":1,"not_found":4,"invalid_plate":0,"queue":59,"inflight":5}
-[2026-04-03T14:46:21.541Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:21.577Z] DEBUG Procesando registro {"worker":1,"id":38722,"plate":"TPJS87","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:29.798Z] INFO Resultado {"worker":4,"id":38717,"plate":"TKJG99","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:29.843Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:29.880Z] DEBUG Procesando registro {"worker":4,"id":38723,"plate":"SVJV13","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:31.287Z] INFO Resultado {"worker":5,"id":38718,"plate":"RSRD93","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:31.324Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:31.357Z] DEBUG Procesando registro {"worker":5,"id":38724,"plate":"LRLK70","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:33.214Z] INFO Resultado {"worker":6,"id":38719,"plate":"PGPK88","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:33.258Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:33.292Z] DEBUG Procesando registro {"worker":6,"id":38725,"plate":"RWGF60","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:39.156Z] INFO Resultado {"worker":2,"id":38720,"plate":"JKTT21","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:39.208Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:39.253Z] DEBUG Procesando registro {"worker":2,"id":38726,"plate":"LZPH16","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:40.757Z] INFO Resultado {"worker":3,"id":38721,"plate":"PFTW45","status":"not_found","next_retry_at":null}
-[2026-04-03T14:46:40.784Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:40.820Z] DEBUG Procesando registro {"worker":3,"id":38727,"plate":"TGFV99","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:51.412Z] INFO Resultado {"worker":1,"id":38722,"plate":"TPJS87","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:51.503Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:51.535Z] DEBUG Procesando registro {"worker":1,"id":38728,"plate":"LLVD66","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:58.336Z] INFO Resultado {"worker":4,"id":38723,"plate":"SVJV13","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:58.336Z] INFO Heartbeat {"processed":64,"ok":57,"rate_limited":1,"error":1,"not_found":5,"invalid_plate":0,"queue":59,"inflight":5}
-[2026-04-03T14:46:58.385Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:58.427Z] DEBUG Procesando registro {"worker":4,"id":38729,"plate":"GPVS24","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:46:59.305Z] INFO Resultado {"worker":6,"id":38725,"plate":"RWGF60","status":"ok","next_retry_at":null}
-[2026-04-03T14:46:59.343Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:46:59.369Z] DEBUG Procesando registro {"worker":6,"id":38730,"plate":"TRKF73","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:47:00.025Z] INFO Resultado {"worker":5,"id":38724,"plate":"LRLK70","status":"ok","next_retry_at":null}
-[2026-04-03T14:47:00.058Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:47:00.091Z] DEBUG Procesando registro {"worker":5,"id":38731,"plate":"SKPK19","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:47:01.694Z] INFO Resultado {"worker":2,"id":38726,"plate":"LZPH16","status":"ok","next_retry_at":null}
-[2026-04-03T14:47:01.732Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:47:01.764Z] DEBUG Procesando registro {"worker":2,"id":38732,"plate":"TBTH48","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:47:10.619Z] INFO Resultado {"worker":3,"id":38727,"plate":"TGFV99","status":"ok","next_retry_at":null}
-[2026-04-03T14:47:10.653Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:47:10.688Z] DEBUG Procesando registro {"worker":3,"id":38733,"plate":"BXKC80","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:47:22.778Z] INFO Resultado {"worker":1,"id":38728,"plate":"LLVD66","status":"ok","next_retry_at":null}
-[2026-04-03T14:47:22.818Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:47:22.851Z] DEBUG Procesando registro {"worker":1,"id":38734,"plate":"LDLF34","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:47:25.166Z] INFO Resultado {"worker":4,"id":38729,"plate":"GPVS24","status":"ok","next_retry_at":null}
-[2026-04-03T14:47:25.192Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:47:25.218Z] DEBUG Procesando registro {"worker":4,"id":38735,"plate":"GHPK64","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:47:29.511Z] INFO Resultado {"worker":6,"id":38730,"plate":"TRKF73","status":"ok","next_retry_at":null}
-[2026-04-03T14:57:44.617Z] INFO Procesador GetAPI iniciado {"collection":"vehicle_detection_getapi2","directus":"https://pedro-valdivia-cam1-directus.inslyw.easypanel.host","calls_per_min":25,"batch_size":10,"idle_wait_ms":10000,"loop_wait_ms":0,"concurrency":6,"claim_lock":true,"lock_ms":180000,"queue_max":240}
-[2026-04-03T14:57:44.621Z] INFO Heartbeat {"processed":0,"ok":0,"rate_limited":0,"error":0,"not_found":0,"invalid_plate":0,"queue":0,"inflight":0}
-[2026-04-03T14:57:44.633Z] INFO Sin pendientes (idle) {"idle_wait_ms":10000}
-[2026-04-03T14:57:44.732Z] INFO Cola recargada {"added":60,"queue":60,"source":"pending"}
-[2026-04-03T14:57:44.772Z] DEBUG Procesando registro {"worker":1,"id":38859,"plate":"KDCD80","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:57:51.472Z] INFO Resultado {"worker":1,"id":38859,"plate":"KDCD80","status":"ok","next_retry_at":null}
-[2026-04-03T14:57:51.519Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
-[2026-04-03T14:57:51.557Z] DEBUG Procesando registro {"worker":1,"id":38860,"plate":"VKXH19","attempts":0,"source":"pending","queue":59}
-[2026-04-03T14:57:52.280Z] WARN Backoff global activo por rate limit {"until":"2026-04-03T14:57:58.264Z","remaining_ms":5984}
-[2026-04-03T14:57:54.666Z] INFO Cola recargada {"added":1,"queue":58,"source":"pending"}
-[2026-04-03T14:57:54.674Z] DEBUG Procesando registro {"worker":3,"id":38861,"plate":"LKLP44","attempts":0,"source":"pending","queue":56}
-[2026-04-03T14:57:54.700Z] DEBUG Procesando registro {"worker":5,"id":38864,"plate":"GCBD49","attempts":0,"source":"pending","queue":55}
-[2026-04-03T14:57:54.708Z] DEBUG Procesando registro {"worker":6,"id":38865,"plate":"RKFB81","attempts":0,"source":"pending","queue":55}
-[2026-04-03T14:57:54.814Z] DEBUG Procesando registro {"worker":4,"id":38862,"plate":"PSVL88","attempts":0,"source":"pending","queue":55}
-[2026-04-03T14:57:54.821Z] DEBUG Procesando registro {"worker":2,"id":38863,"plate":"HXJF73","attempts":0,"source":"pending","queue":55}
-[2026-04-03T14:57:57.954Z] INFO Resultado {"worker":1,"id":38860,"plate":"VKXH19","status":"ok","next_retry_at":null}
-[2026-04-03T14:57:57.975Z] INFO Cola recargada {"added":5,"queue":60,"source":"pending"}
-[2026-04-03T14:57:58.006Z] DEBUG Procesando registro {"worker":1,"id":38866,"plate":"JSLD88","attempts":0,"source":"pending","queue":59}
+2026-04-03T15:17:10.771Z] DEBUG Procesando registro {"worker":1,"id":39017,"plate":"JTZZ29","attempts":0,"source":"pending","queue":91}
+[2026-04-03T15:17:12.068Z] INFO Resultado {"worker":1,"id":39016,"plate":"PGPP33","status":"ok","next_retry_at":null}
+[2026-04-03T15:17:12.113Z] INFO Cola recargada {"added":2,"queue":61,"source":"pending"}
+[2026-04-03T15:17:13.110Z] INFO Resultado {"worker":2,"id":39012,"plate":"RFXW93","status":"ok","next_retry_at":null}
+[2026-04-03T15:17:13.139Z] INFO Cola recargada {"added":1,"queue":92,"source":"pending"}
+[2026-04-03T15:17:13.173Z] DEBUG Procesando registro {"worker":2,"id":39018,"plate":"DZYG92","attempts":0,"source":"pending","queue":91}
+[2026-04-03T15:17:14.691Z] INFO Resultado {"worker":1,"id":39017,"plate":"JTZZ29","status":"ok","next_retry_at":null}
+[2026-04-03T15:17:14.720Z] INFO Cola recargada {"added":1,"queue":61,"source":"pending"}
+[2026-04-03T15:17:15.519Z] INFO Resultado {"worker":5,"id":39013,"plate":"TCRR96","status":"ok","next_retry_at":null}
+[2026-04-03T15:17:15.547Z] INFO Cola recargada {"added":1,"queue":92,"source":"pending"}
+[2026-04-03T15:17:15.576Z] DEBUG Procesando registro {"worker":5,"id":39019,"plate":"KZFF66","attempts":0,"source":"pending","queue":91}
+[2026-04-03T15:17:16.705Z] INFO Cola recargada {"added":1,"queue":58,"source":"pending"}
+[2026-04-03T15:17:17.919Z] INFO Resultado {"worker":4,"id":39014,"plate":"RXFZ46","status":"ok","next_retry_at":null}
+[2026-04-03T15:17:17.950Z] INFO Cola recargada {"added":5,"queue":96,"source":"pending"}
+[2026-04-03T15:17:17.973Z] DEBUG Procesando registro {"worker":4,"id":39020,"plate":"LPRB94","attempts":0,"source":"pending","queue":95}
+[2026-04-03T15:17:29.131Z] INFO Resultado {"worker":5,"id":39021,"plate":"SPLS31","status":"rate_limited","next_retry_at":"2026-04-03T15:18:08.063Z"}
+[2026-04-03T15:17:29.131Z] WARN Backoff global activo por rate limit {"until":"2026-04-03T15:18:08.131Z","remaining_ms":39000}
+[2026-04-03T15:17:31.491Z] INFO Resultado {"worker":1,"id":39018,"plate":"DZYG92","status":"rate_limited","next_retry_at":"2026-04-03T15:18:09.465Z"}
+[2026-04-03T15:17:33.894Z] INFO Resultado {"worker":3,"id":39019,"plate":"KZFF66","status":"rate_limited","next_retry_at":"2026-04-03T15:18:03.864Z"}
+[2026-04-03T15:17:36.296Z] INFO Resultado {"worker":4,"id":39020,"plate":"LPRB94","status":"rate_limited","next_retry_at":"2026-04-03T15:18:15.265Z"}
+[2026-04-03T15:17:38.692Z] INFO Resultado {"worker":6,"id":39023,"plate":"SSVK52","status":"rate_limited","next_retry_at":"2026-04-03T15:18:13.665Z"}
+[2026-04-03T15:17:38.692Z] INFO Heartbeat {"processed":7,"ok":2,"rate_limited":5,"error":0,"not_found":0,"invalid_plate":0,"queue":56,"inflight":1}
+[2026-04-03T15:17:38.693Z] INFO Resumen {"window_s":32,"per_min":{"processed":13.11,"ok":3.74,"not_found":0,"error":0,"rate_limited":9.36,"invalid_plate":0},"efficiency_pct":104.9}
+[2026-04-03T15:17:41.102Z] INFO Resultado {"worker":2,"id":39022,"plate":"SBJV71","status":"rate_limited","next_retry_at":"2026-04-03T15:18:18.069Z"}
+[2026-04-03T15:17:59.145Z] WARN Backoff global activo por rate limit {"until":"2026-04-03T15:18:18.102Z","remaining_ms":18957}
+[2026-04-03T15:18:18.196Z] INFO Cola recargada {"added":4,"queue":55,"source":"pending"}
+[2026-04-03T15:18:35.363Z] INFO Resultado {"worker":4,"id":39025,"plate":"SGHY91","status":"ok","next_retry_at":null}
+[2026-04-03T15:18:35.363Z] INFO Heartbeat {"processed":9,"ok":3,"rate_limited":6,"error":0,"not_found":0,"invalid_plate":0,"queue":54,"inflight":5}
+[2026-04-03T15:18:35.363Z] INFO Resumen {"window_s":89,"per_min":{"processed":6.09,"ok":2.03,"not_found":0,"error":0,"rate_limited":4.06,"invalid_plate":0},"efficiency_pct":48.7}
+[2026-04-03T15:18:35.408Z] INFO Cola recargada {"added":6,"queue":60,"source":"pending"}
+[2026-04-03T15:18:36.989Z] INFO Resultado {"worker":5,"id":39024,"plate":"RZXZ84","status":"ok","next_retry_at":null}
+[2026-04-03T15:18:37.040Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:18:40.166Z] INFO Resultado {"worker":3,"id":39027,"plate":"JPRG74","status":"ok","next_retry_at":null}
+[2026-04-03T15:18:40.192Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:18:41.528Z] INFO Resultado {"worker":1,"id":39026,"plate":"JGTY64","status":"ok","next_retry_at":null}
+[2026-04-03T15:18:41.562Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:18:45.074Z] INFO Resultado {"worker":6,"id":39028,"plate":"RKYD43","status":"ok","next_retry_at":null}
+[2026-04-03T15:18:45.113Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:18:48.123Z] INFO Resultado {"worker":2,"id":39029,"plate":"JJTJ73","status":"ok","next_retry_at":null}
+[2026-04-03T15:18:48.170Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:19:04.013Z] INFO Resultado {"worker":5,"id":39031,"plate":"SRGL84","status":"ok","next_retry_at":null}
+[2026-04-03T15:19:04.069Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:19:06.365Z] INFO Resultado {"worker":3,"id":39032,"plate":"LDPX90","status":"ok","next_retry_at":null}
+[2026-04-03T15:19:06.366Z] INFO Heartbeat {"processed":16,"ok":10,"rate_limited":6,"error":0,"not_found":0,"invalid_plate":0,"queue":59,"inflight":5}
+[2026-04-03T15:19:06.366Z] INFO Resumen {"window_s":31,"per_min":{"processed":13.55,"ok":13.55,"not_found":0,"error":0,"rate_limited":0,"invalid_plate":0},"efficiency_pct":108.4}
+[2026-04-03T15:19:06.389Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:19:09.351Z] INFO Resultado {"worker":4,"id":39030,"plate":"TR6175","status":"ok","next_retry_at":null}
+[2026-04-03T15:19:09.376Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:19:11.733Z] INFO Resultado {"worker":1,"id":39033,"plate":"SWYY61","status":"ok","next_retry_at":null}
+[2026-04-03T15:19:11.760Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:19:15.105Z] INFO Resultado {"worker":6,"id":39034,"plate":"TVJH92","status":"ok","next_retry_at":null}
+[2026-04-03T15:19:15.136Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:19:16.328Z] INFO Resultado {"worker":2,"id":39035,"plate":"JXJK23","status":"ok","next_retry_at":null}
+[2026-04-03T15:19:16.356Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:19:18.368Z] INFO Resultado {"worker":3,"id":39037,"plate":"TFVF55","status":"rate_limited","next_retry_at":"2026-04-03T15:19:50.334Z"}
+[2026-04-03T15:19:18.369Z] WARN Backoff global activo por rate limit {"until":"2026-04-03T15:19:50.369Z","remaining_ms":32000}
+[2026-04-03T15:19:20.766Z] INFO Resultado {"worker":4,"id":39038,"plate":"BYHN52","status":"error","next_retry_at":"2026-04-03T15:20:25.734Z"}
+[2026-04-03T15:19:34.611Z] INFO Resultado {"worker":5,"id":39036,"plate":"LXDG76","status":"ok","next_retry_at":null}
+[2026-04-03T15:19:48.371Z] WARN Backoff global activo por rate limit {"until":"2026-04-03T15:19:50.369Z","remaining_ms":1998}
+[2026-04-03T15:19:50.437Z] INFO Cola recargada {"added":1,"queue":58,"source":"pending"}
+[2026-04-03T15:19:53.118Z] INFO Resultado {"worker":2,"id":39041,"plate":"LWZS31","status":"ok","next_retry_at":null}
+[2026-04-03T15:19:53.119Z] INFO Heartbeat {"processed":24,"ok":16,"rate_limited":7,"error":1,"not_found":0,"invalid_plate":0,"queue":57,"inflight":5}
+[2026-04-03T15:19:53.119Z] INFO Resumen {"window_s":78,"per_min":{"processed":11.57,"ok":10.03,"not_found":0,"error":0.77,"rate_limited":0.77,"invalid_plate":0},"efficiency_pct":92.6}
+[2026-04-03T15:19:53.153Z] INFO Cola recargada {"added":3,"queue":60,"source":"pending"}
+[2026-04-03T15:19:54.836Z] INFO Resultado {"worker":6,"id":39040,"plate":"LKRT24","status":"ok","next_retry_at":null}
+[2026-04-03T15:19:54.859Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:19:55.315Z] INFO Resultado {"worker":1,"id":39039,"plate":"TSBZ55","status":"ok","next_retry_at":null}
+[2026-04-03T15:19:55.343Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:20:12.124Z] INFO Resultado {"worker":5,"id":39042,"plate":"FTBB93","status":"ok","next_retry_at":null}
+[2026-04-03T15:20:12.156Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:20:17.135Z] INFO Resultado {"worker":3,"id":39044,"plate":"DKJF03","status":"not_found","next_retry_at":null}
+[2026-04-03T15:20:17.178Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:20:18.809Z] INFO Resultado {"worker":4,"id":39043,"plate":"TPYP74","status":"ok","next_retry_at":null}
+[2026-04-03T15:20:18.831Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:20:19.334Z] INFO Resultado {"worker":2,"id":39045,"plate":"FFHW57","status":"ok","next_retry_at":null}
+[2026-04-03T15:20:19.362Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:20:24.622Z] INFO Resultado {"worker":6,"id":39046,"plate":"KCLP68","status":"ok","next_retry_at":null}
+[2026-04-03T15:20:24.623Z] INFO Heartbeat {"processed":31,"ok":22,"rate_limited":7,"error":1,"not_found":1,"invalid_plate":0,"queue":59,"inflight":5}
+[2026-04-03T15:20:24.623Z] INFO Resumen {"window_s":32,"per_min":{"processed":13.33,"ok":11.43,"not_found":1.9,"error":0,"rate_limited":0,"invalid_plate":0},"efficiency_pct":106.6}
+[2026-04-03T15:20:24.665Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:20:29.408Z] INFO Resultado {"worker":1,"id":39047,"plate":"CCRJ80","status":"ok","next_retry_at":null}
+[2026-04-03T15:20:29.451Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T15:20:42.924Z] INFO Resultado {"worker":5,"id":39048,"plate":"RGYS97","status":"ok","next_retry_at":null}
+[2026-04-03T16:55:53.807Z] INFO Resultado {"worker":3,"id":40247,"plate":"VGST97","status":"ok","next_retry_at":null}
+[2026-04-03T16:55:53.807Z] INFO Heartbeat {"processed":1233,"ok":942,"rate_limited":22,"error":158,"not_found":111,"invalid_plate":0,"queue":57,"inflight":5}
+[2026-04-03T16:55:53.807Z] INFO Resumen {"window_s":60,"per_min":{"processed":10.03,"ok":4.01,"not_found":0,"error":5.02,"rate_limited":1,"invalid_plate":0},"efficiency_pct":80.2}
+[2026-04-03T16:55:53.895Z] INFO Cola recargada {"added":3,"queue":60,"source":"pending"}
+[2026-04-03T16:55:54.142Z] INFO Resultado {"worker":4,"id":40246,"plate":"BRTX00","status":"not_found","next_retry_at":null}
+[2026-04-03T16:55:54.178Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:55:56.541Z] INFO Resultado {"worker":1,"id":40248,"plate":"VPJI85","status":"error","next_retry_at":"2026-04-03T16:57:01.505Z"}
+[2026-04-03T16:55:56.571Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:55:58.118Z] INFO Resultado {"worker":6,"id":40245,"plate":"PZKK21","status":"ok","next_retry_at":null}
+[2026-04-03T16:55:58.146Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:08.545Z] INFO Resultado {"worker":1,"id":40253,"plate":"ILSP39","status":"error","next_retry_at":"2026-04-03T16:57:14.513Z"}
+[2026-04-03T16:56:08.578Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:13.364Z] INFO Resultado {"worker":2,"id":40249,"plate":"FKPH00","status":"not_found","next_retry_at":null}
+[2026-04-03T16:56:13.404Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:18.952Z] INFO Resultado {"worker":5,"id":40250,"plate":"JDZY13","status":"ok","next_retry_at":null}
+[2026-04-03T16:56:18.985Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:22.538Z] INFO Resultado {"worker":3,"id":40251,"plate":"VDVR76","status":"ok","next_retry_at":null}
+[2026-04-03T16:56:22.561Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:22.956Z] INFO Resultado {"worker":1,"id":40255,"plate":"ICFW34","status":"error","next_retry_at":"2026-04-03T16:57:26.923Z"}
+[2026-04-03T16:56:22.985Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:24.420Z] INFO Resultado {"worker":4,"id":40252,"plate":"LVCK21","status":"ok","next_retry_at":null}
+[2026-04-03T16:56:24.421Z] INFO Heartbeat {"processed":1242,"ok":946,"rate_limited":22,"error":161,"not_found":113,"invalid_plate":0,"queue":59,"inflight":5}
+[2026-04-03T16:56:24.421Z] INFO Resumen {"window_s":90,"per_min":{"processed":12.61,"ok":5.31,"not_found":1.33,"error":5.31,"rate_limited":0.66,"invalid_plate":0},"efficiency_pct":100.9}
+[2026-04-03T16:56:24.452Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:30.737Z] INFO Resultado {"worker":6,"id":40254,"plate":"PLBF35","status":"ok","next_retry_at":null}
+[2026-04-03T16:56:30.796Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:32.548Z] INFO Resultado {"worker":3,"id":40258,"plate":"ZLCQ14","status":"error","next_retry_at":"2026-04-03T16:57:41.523Z"}
+[2026-04-03T16:56:32.580Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:35.748Z] INFO Resultado {"worker":1,"id":40259,"plate":"IA9191","status":"not_found","next_retry_at":null}
+[2026-04-03T16:56:35.776Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:42.379Z] INFO Resultado {"worker":5,"id":40257,"plate":"LJLP63","status":"ok","next_retry_at":null}
+[2026-04-03T16:56:42.414Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:43.940Z] INFO Resultado {"worker":2,"id":40256,"plate":"SCSX83","status":"ok","next_retry_at":null}
+[2026-04-03T16:56:43.964Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}
+[2026-04-03T16:56:46.960Z] INFO Resultado {"worker":3,"id":40262,"plate":"DCGI50","status":"error","next_retry_at":"2026-04-03T16:57:52.927Z"}
+[2026-04-03T16:56:46.987Z] INFO Cola recargada {"added":1,"queue":60,"source":"pending"}

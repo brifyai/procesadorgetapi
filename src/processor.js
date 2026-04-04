@@ -477,6 +477,10 @@ async function startProcessor() {
         rows = await directus.listQueueByStatus('rate_limited', { limit: need, nowIso });
         added = enqueueRows(rows, 'rate_limited');
       }
+        if (added === 0) {
+          rows = await directus.listErrorRateLimitQueue({ limit: need, nowIso });
+          added = enqueueRows(rows, 'error_rate_limited');
+        }
       if (added > 0) logAt(logLevel, 'info', 'Cola recargada', { added, queue: queue.length, source: lastSource });
     } catch (e) {
       logAt(logLevel, 'error', 'Error recargando cola desde Directus', { message: e?.message || String(e) });
@@ -510,8 +514,7 @@ async function startProcessor() {
       const now = Date.now();
       if (heartbeatMs > 0 && now - lastHeartbeatAt >= heartbeatMs) {
         const elapsedMs = Math.max(1, now - rateLastAt);
-        const dt = elapsedMs / 1000;
-        const window = Math.max(1, rateWindowMs / 1000);
+        const dt = Math.max(1, elapsedMs / 1000);
         const current = { ...counters };
         const delta = {
           processed: current.processed - (rateLastCounters.processed || 0),
@@ -522,23 +525,26 @@ async function startProcessor() {
           invalid_plate: current.invalid_plate - (rateLastCounters.invalid_plate || 0)
         };
         const perMin = (n) => Math.round((Number(n || 0) * 60 * 100) / dt) / 100;
-        const efficiency = callsPerMinute > 0
-          ? Math.round(((perMin(delta.processed) * 2) / callsPerMinute) * 1000) / 10
-          : null;
+        const processedPerMin = perMin(delta.processed);
+        const callsPerMinMin = perMin((delta.ok * 2) + Math.max(0, delta.processed - delta.ok));
+        const callsPerMinMax = perMin(delta.processed * 2);
+        const efficiencyMin = callsPerMinute > 0 ? Math.round((callsPerMinMin / callsPerMinute) * 1000) / 10 : null;
+        const efficiencyMax = callsPerMinute > 0 ? Math.round((callsPerMinMax / callsPerMinute) * 1000) / 10 : null;
 
         lastHeartbeatAt = now;
         logAt(logLevel, 'info', 'Heartbeat', { ...counters, queue: queue.length, inflight: inFlightIds.size });
         logAt(logLevel, 'info', 'Resumen', {
           window_s: Math.round(dt),
           per_min: {
-            processed: perMin(delta.processed),
+            processed: processedPerMin,
             ok: perMin(delta.ok),
             not_found: perMin(delta.not_found),
             error: perMin(delta.error),
             rate_limited: perMin(delta.rate_limited),
             invalid_plate: perMin(delta.invalid_plate)
           },
-          efficiency_pct: efficiency
+          calls_per_min_est: { min: callsPerMinMin, max: callsPerMinMax },
+          efficiency_pct_est: { min: efficiencyMin, max: efficiencyMax }
         });
 
         if (elapsedMs >= rateWindowMs) {
@@ -555,7 +561,7 @@ async function startProcessor() {
       const plate = normalizePlate(rawPlate);
       const attempts = schema.attemptsField ? Number(row?.[schema.attemptsField] ?? 0) : 0;
 
-      if (claimEnabled && schema.nextRetryAtField && source === 'pending') {
+      if (claimEnabled && schema.nextRetryAtField && (source === 'pending' || source === 'error_rate_limited')) {
         const lockUntilIso = new Date(Date.now() + lockMs).toISOString();
         try {
           await directus.claimLockById(id, lockUntilIso);

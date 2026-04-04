@@ -228,6 +228,40 @@ async function listQueueByStatus(status, { limit, nowIso } = {}) {
   return Array.isArray(payload?.data) ? payload.data : [];
 }
 
+async function listErrorRateLimitQueue({ limit, nowIso } = {}) {
+  const schema = await resolveGetApiSchema();
+  if (!schema.ok) return [];
+  if (!schema.statusField) throw new Error(`La colección ${schema.collection} no tiene campo status`);
+  if (!schema.messageField) return [];
+  const safeLimit = Math.min(100, Math.max(1, Number.parseInt(limit ?? '25', 10) || 25));
+  const sort = schema.createdAtField ? `${schema.createdAtField},id` : 'id';
+  const now = typeof nowIso === 'string' && nowIso ? nowIso : new Date().toISOString();
+
+  const query = {
+    limit: safeLimit,
+    sort,
+    fields: [
+      schema.idField,
+      schema.detectionIdField,
+      schema.plateField,
+      schema.statusField,
+      schema.attemptsField,
+      schema.nextRetryAtField
+    ].filter(Boolean).join(','),
+    [`filter[${schema.statusField}][_eq]`]: 'error',
+    [`filter[_or][0][${schema.messageField}][_icontains]`]: 'rate limit exceeded',
+    [`filter[_or][1][${schema.messageField}][_icontains]`]: 'rate limited'
+  };
+
+  if (schema.nextRetryAtField) {
+    query[`filter[_and][0][_or][0][${schema.nextRetryAtField}][_null]`] = 'true';
+    query[`filter[_and][0][_or][1][${schema.nextRetryAtField}][_lte]`] = now;
+  }
+
+  const payload = await directusRequest('GET', `/items/${encodeURIComponent(schema.collection)}`, { query });
+  return Array.isArray(payload?.data) ? payload.data : [];
+}
+
 async function patchRowById(id, patch) {
   const schema = await resolveGetApiSchema();
   if (!schema.ok) return null;
@@ -253,6 +287,7 @@ module.exports = {
   directusRequest,
   resolveGetApiSchema,
   listQueueByStatus,
+  listErrorRateLimitQueue,
   claimLockById,
   patchRowById
 };

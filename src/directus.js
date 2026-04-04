@@ -67,6 +67,11 @@ function getDirectusConfig() {
   return { baseUrl, token, collection };
 }
 
+function getDetectionsCollection() {
+  const v = String(process.env.DIRECTUS_DETECTIONS_COLLECTION || process.env.DIRECTUS_COLLECTION || 'vehicle_detections').trim();
+  return v || 'vehicle_detections';
+}
+
 async function directusRequest(method, path, { query, body, headers } = {}) {
   const { baseUrl, token } = getDirectusConfig();
   if (!baseUrl) throw new Error('Falta DIRECTUS_URL');
@@ -250,7 +255,78 @@ async function listErrorRateLimitQueue({ limit, nowIso } = {}) {
     ].filter(Boolean).join(','),
     [`filter[${schema.statusField}][_eq]`]: 'error',
     [`filter[_or][0][${schema.messageField}][_icontains]`]: 'rate limit exceeded',
-    [`filter[_or][1][${schema.messageField}][_icontains]`]: 'rate limited'
+    [`filter[_or][1][${schema.messageField}][_icontains]`]: 'rate limited',
+    [`filter[_or][2][${schema.messageField}][_icontains]`]: 'try again'
+  };
+
+  if (schema.nextRetryAtField) {
+    query[`filter[_and][0][_or][0][${schema.nextRetryAtField}][_null]`] = 'true';
+    query[`filter[_and][0][_or][1][${schema.nextRetryAtField}][_lte]`] = now;
+  }
+
+  const payload = await directusRequest('GET', `/items/${encodeURIComponent(schema.collection)}`, { query });
+  return Array.isArray(payload?.data) ? payload.data : [];
+}
+
+async function listErrorAbortedQueue({ limit, nowIso } = {}) {
+  const schema = await resolveGetApiSchema();
+  if (!schema.ok) return [];
+  if (!schema.statusField) throw new Error(`La colección ${schema.collection} no tiene campo status`);
+  if (!schema.messageField) return [];
+  const safeLimit = Math.min(100, Math.max(1, Number.parseInt(limit ?? '25', 10) || 25));
+  const sort = schema.createdAtField ? `${schema.createdAtField},id` : 'id';
+  const now = typeof nowIso === 'string' && nowIso ? nowIso : new Date().toISOString();
+
+  const query = {
+    limit: safeLimit,
+    sort,
+    fields: [
+      schema.idField,
+      schema.detectionIdField,
+      schema.plateField,
+      schema.statusField,
+      schema.attemptsField,
+      schema.nextRetryAtField
+    ].filter(Boolean).join(','),
+    [`filter[${schema.statusField}][_eq]`]: 'error',
+    [`filter[${schema.messageField}][_icontains]`]: 'aborted'
+  };
+
+  if (schema.nextRetryAtField) {
+    query[`filter[_and][0][_or][0][${schema.nextRetryAtField}][_null]`] = 'true';
+    query[`filter[_and][0][_or][1][${schema.nextRetryAtField}][_lte]`] = now;
+  }
+
+  const payload = await directusRequest('GET', `/items/${encodeURIComponent(schema.collection)}`, { query });
+  return Array.isArray(payload?.data) ? payload.data : [];
+}
+
+async function listErrorInvalidPlateQueue({ limit, nowIso } = {}) {
+  const schema = await resolveGetApiSchema();
+  if (!schema.ok) return [];
+  if (!schema.statusField) throw new Error(`La colección ${schema.collection} no tiene campo status`);
+  if (!schema.messageField) return [];
+  const safeLimit = Math.min(100, Math.max(1, Number.parseInt(limit ?? '25', 10) || 25));
+  const sort = schema.createdAtField ? `${schema.createdAtField},id` : 'id';
+  const now = typeof nowIso === 'string' && nowIso ? nowIso : new Date().toISOString();
+
+  const query = {
+    limit: safeLimit,
+    sort,
+    fields: [
+      schema.idField,
+      schema.detectionIdField,
+      schema.plateField,
+      schema.statusField,
+      schema.attemptsField,
+      schema.nextRetryAtField
+    ].filter(Boolean).join(','),
+    [`filter[${schema.statusField}][_eq]`]: 'error',
+    [`filter[_or][0][${schema.messageField}][_icontains]`]: 'http 422',
+    [`filter[_or][1][${schema.messageField}][_icontains]`]: 'formato de patente',
+    [`filter[_or][2][${schema.messageField}][_icontains]`]: 'patente inválida',
+    [`filter[_or][3][${schema.messageField}][_icontains]`]: 'patente valida',
+    [`filter[_or][4][${schema.messageField}][_icontains]`]: 'patente válida'
   };
 
   if (schema.nextRetryAtField) {
@@ -272,6 +348,42 @@ async function patchRowById(id, patch) {
   return payload?.data || null;
 }
 
+async function getItemById(collection, id, { fields } = {}) {
+  const safeCollection = String(collection || '').trim();
+  const safeId = String(id || '').trim();
+  if (!safeCollection || !safeId) return null;
+  const query = {};
+  if (fields) query.fields = String(fields);
+  const payload = await directusRequest('GET', `/items/${encodeURIComponent(safeCollection)}/${encodeURIComponent(safeId)}`, { query });
+  return payload?.data || null;
+}
+
+async function patchItemById(collection, id, patch) {
+  const safeCollection = String(collection || '').trim();
+  const safeId = String(id || '').trim();
+  if (!safeCollection || !safeId) return null;
+  const payload = await directusRequest('PATCH', `/items/${encodeURIComponent(safeCollection)}/${encodeURIComponent(safeId)}`, {
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch || {})
+  });
+  return payload?.data || null;
+}
+
+async function deleteItemById(collection, id) {
+  const safeCollection = String(collection || '').trim();
+  const safeId = String(id || '').trim();
+  if (!safeCollection || !safeId) return null;
+  await directusRequest('DELETE', `/items/${encodeURIComponent(safeCollection)}/${encodeURIComponent(safeId)}`);
+  return true;
+}
+
+async function deleteFileById(id) {
+  const safeId = String(id || '').trim();
+  if (!safeId) return null;
+  await directusRequest('DELETE', `/files/${encodeURIComponent(safeId)}`);
+  return true;
+}
+
 async function claimLockById(id, lockUntilIso) {
   const schema = await resolveGetApiSchema();
   if (!schema.ok) return null;
@@ -284,10 +396,17 @@ async function claimLockById(id, lockUntilIso) {
 
 module.exports = {
   getDirectusConfig,
+  getDetectionsCollection,
   directusRequest,
   resolveGetApiSchema,
   listQueueByStatus,
   listErrorRateLimitQueue,
+  listErrorAbortedQueue,
+  listErrorInvalidPlateQueue,
+  getItemById,
+  patchItemById,
+  deleteItemById,
+  deleteFileById,
   claimLockById,
   patchRowById
 };

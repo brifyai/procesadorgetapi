@@ -13,6 +13,14 @@ function clamp(n, min, max) {
   return Math.min(max, Math.max(min, n));
 }
 
+function parseEnvBool(name, fallback) {
+  const raw = String(process.env[name] ?? '').trim().toLowerCase();
+  if (!raw) return Boolean(fallback);
+  if (raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on') return true;
+  if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false;
+  return Boolean(fallback);
+}
+
 function getLogLevel() {
   const raw = String(process.env.PROCESSOR_LOG_LEVEL ?? 'info').trim().toLowerCase();
   const levels = { error: 0, warn: 1, info: 2, debug: 3 };
@@ -127,6 +135,90 @@ function getGetApiConfig() {
   const baseUrl = String(process.env.GETAPI_BASE_URL || 'https://chile.getapi.cl').trim().replace(/\/+$/, '');
   if (!apiKey) throw new Error('Falta GETAPI_API_KEY');
   return { apiKey, baseUrl };
+}
+
+function getGroqConfig() {
+  const apiKey = String(process.env.GROQ_API_KEY || '').trim();
+  const baseUrl = String(process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1').trim().replace(/\/+$/, '');
+  const model = String(process.env.GROQ_VISION_MODEL || 'llama-3.2-11b-vision-preview').trim();
+  return { apiKey, baseUrl, model };
+}
+
+async function fetchBytesWithTimeout(url, timeoutMs) {
+  const controller = new AbortController();
+  const ms = Number.isFinite(timeoutMs) ? timeoutMs : 20000;
+  const id = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    const contentType = res.headers.get('content-type') || '';
+    const buf = Buffer.from(await res.arrayBuffer());
+    return { ok: res.ok, status: res.status, contentType, bytes: buf };
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+function extractDirectusFileIdFromUrl(url) {
+  const text = String(url || '').trim();
+  if (!text) return null;
+  const m = text.match(/\/assets\/([^/?#]+)/i);
+  if (m && m[1]) return m[1];
+  return null;
+}
+
+async function groqOcrPlateFromImageUrl(imageUrl) {
+  const { apiKey, baseUrl, model } = getGroqConfig();
+  if (!apiKey) return null;
+  const bytesRes = await fetchBytesWithTimeout(imageUrl, parseEnvInt('OCR_IMAGE_TIMEOUT_MS', 25000));
+  if (!bytesRes.ok || !bytesRes.bytes || bytesRes.bytes.length === 0) return null;
+  const mime = bytesRes.contentType.includes('image/') ? bytesRes.contentType.split(';')[0].trim() : 'image/jpeg';
+  const b64 = bytesRes.bytes.toString('base64');
+  const dataUrl = `data:${mime};base64,${b64}`;
+
+  const prompt = String(process.env.OCR_PLATE_PROMPT || 'Extrae la patente (placa) del vehículo desde la imagen. Devuelve solo la patente en mayúsculas, sin espacios ni guiones. Si no puedes leerla con confianza, responde exactamente: UNKNOWN.').trim();
+  const body = {
+    model,
+    temperature: 0,
+    messages: [
+      { role: 'system', content: 'Eres un OCR especializado en patentes vehiculares.' },
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: dataUrl } }
+        ]
+      }
+    ]
+  };
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), parseEnvInt('OCR_API_TIMEOUT_MS', 30000));
+  try {
+    const res = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+    const json = await res.json().catch(() => null);
+    const content = json?.choices?.[0]?.message?.content;
+    const text = String(content ?? '').trim();
+    if (!text) return null;
+    if (text.toUpperCase().includes('UNKNOWN')) return null;
+    return normalizePlate(text);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+function normalizeDetectionId(value) {
+  if (value == null) return null;
+  if (typeof value === 'object') {
+    if ('id' in value && value.id != null) return String(value.id);
+  }
+  return String(value);
 }
 
 async function getApiGetPlateInfo(plate, { limiter, waitGlobalBackoff } = {}) {
@@ -404,6 +496,9 @@ async function startProcessor() {
   const queueMax = clamp(parseEnvInt('PROCESSOR_QUEUE_MAX', batchSize * concurrency * 4), batchSize, 2000);
   const refillMin = clamp(parseEnvInt('PROCESSOR_QUEUE_REFILL_MIN', batchSize * concurrency), 1, queueMax);
   const rateWindowMs = clamp(parseEnvInt('PROCESSOR_RATE_WINDOW_MS', 60000), 5000, 3600000);
+  const retryAllErrors = parseEnvBool('PROCESSOR_RETRY_ALL_ERRORS', false);
+  const enableOcrFix = parseEnvBool('PROCESSOR_OCR_FIX_ENABLED', true);
+  const enableDeletion = parseEnvBool('PROCESSOR_DELETE_UNRECOVERABLE', false);
 
   logAt(logLevel, 'info', 'Procesador GetAPI iniciado', {
     collection,
@@ -415,7 +510,10 @@ async function startProcessor() {
     concurrency,
     claim_lock: claimEnabled && Boolean(schema.nextRetryAtField),
     lock_ms: lockMs,
-    queue_max: queueMax
+    queue_max: queueMax,
+    retry_all_errors: retryAllErrors,
+    ocr_fix_enabled: enableOcrFix && Boolean(getGroqConfig().apiKey),
+    delete_unrecoverable: enableDeletion
   });
 
   let globalBackoffUntil = 0;
@@ -480,6 +578,18 @@ async function startProcessor() {
         if (added === 0) {
           rows = await directus.listErrorRateLimitQueue({ limit: need, nowIso });
           added = enqueueRows(rows, 'error_rate_limited');
+        }
+        if (added === 0) {
+          rows = await directus.listErrorAbortedQueue({ limit: need, nowIso });
+          added = enqueueRows(rows, 'error_aborted');
+        }
+        if (added === 0) {
+          rows = await directus.listErrorInvalidPlateQueue({ limit: need, nowIso });
+          added = enqueueRows(rows, 'error_invalid_plate');
+        }
+        if (added === 0 && retryAllErrors) {
+          rows = await directus.listQueueByStatus('error', { limit: need, nowIso });
+          added = enqueueRows(rows, 'error_other');
         }
       if (added > 0) logAt(logLevel, 'info', 'Cola recargada', { added, queue: queue.length, source: lastSource });
     } catch (e) {
@@ -560,8 +670,9 @@ async function startProcessor() {
       const rawPlate = schema.plateField ? row?.[schema.plateField] : null;
       const plate = normalizePlate(rawPlate);
       const attempts = schema.attemptsField ? Number(row?.[schema.attemptsField] ?? 0) : 0;
+      const detId = schema.detectionIdField ? normalizeDetectionId(row?.[schema.detectionIdField]) : null;
 
-      if (claimEnabled && schema.nextRetryAtField && (source === 'pending' || source === 'error_rate_limited')) {
+      if (claimEnabled && schema.nextRetryAtField && (source === 'pending' || source === 'error_rate_limited' || source === 'error_aborted' || source === 'error_invalid_plate' || source === 'error_other')) {
         const lockUntilIso = new Date(Date.now() + lockMs).toISOString();
         try {
           await directus.claimLockById(id, lockUntilIso);
@@ -574,7 +685,69 @@ async function startProcessor() {
 
       let outcome = null;
       try {
+        if (source === 'error_invalid_plate' && enableOcrFix && getGroqConfig().apiKey) {
+          const detectionsCollection = directus.getDetectionsCollection();
+          let detection = null;
+          if (detId) {
+            try {
+              detection = await directus.getItemById(detectionsCollection, detId, { fields: 'id,license_plate,image_url' });
+            } catch {
+              try {
+                detection = await directus.getItemById(detectionsCollection, detId, { fields: 'id,image_url' });
+              } catch {
+                detection = null;
+              }
+            }
+          }
+
+          const imageUrl = detection?.image_url || detection?.imageUrl || null;
+          const ocrPlate = imageUrl ? await groqOcrPlateFromImageUrl(imageUrl) : null;
+          const candidate = ocrPlate && isValidPlate(ocrPlate) ? ocrPlate : null;
+
+          if (candidate && candidate !== plate) {
+            try {
+              await directus.patchRowById(id, {
+                [schema.plateField]: candidate,
+                ...(schema.statusField ? { [schema.statusField]: 'pending' } : {}),
+                ...(schema.messageField ? { [schema.messageField]: null } : {}),
+                ...(schema.reasonField ? { [schema.reasonField]: 'ocr_fixed_plate' } : {}),
+                ...(schema.nextRetryAtField ? { [schema.nextRetryAtField]: null } : {})
+              });
+            } catch {
+            }
+            if (detId) {
+              try {
+                await directus.patchItemById(detectionsCollection, detId, { license_plate: candidate });
+              } catch {
+              }
+            }
+            const row2 = { ...(row || {}) };
+            row2[schema.plateField] = candidate;
+            outcome = await processOneRow(row2, { limiter, schema, waitGlobalBackoff });
+          } else if (enableDeletion && detId) {
+            const detectionsCollection = directus.getDetectionsCollection();
+            const fileId = extractDirectusFileIdFromUrl(imageUrl);
+            try {
+              await directus.deleteItemById(schema.collection, String(id));
+            } catch {
+            }
+            try {
+              await directus.deleteItemById(detectionsCollection, detId);
+            } catch {
+            }
+            if (fileId) {
+              try {
+                await directus.deleteFileById(fileId);
+              } catch {
+              }
+            }
+            outcome = { ok: true, status: 'deleted', detectionId: detId, plate };
+          } else {
+            outcome = await processOneRow(row, { limiter, schema, waitGlobalBackoff });
+          }
+        } else {
         outcome = await processOneRow(row, { limiter, schema, waitGlobalBackoff });
+        }
       } catch (e) {
         const message = e?.message || String(e);
         const backoffSeconds = computeBackoffSeconds({ attempts, baseSeconds: 60, maxSeconds: 3600 });

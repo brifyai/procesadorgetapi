@@ -790,8 +790,42 @@ async function startProcessor() {
             const row2 = { ...(row || {}) };
             row2[schema.plateField] = candidate;
             outcome = await processOneRow(row2, { limiter, schema, waitGlobalBackoff, markCall });
-          } else if (enableDeletion && detId) {
-            const detectionsCollection = directus.getDetectionsCollection();
+          } else {
+            if (enableDeletion && detId) {
+              const fileId = extractDirectusFileIdFromUrl(imageUrl);
+              try {
+                await directus.deleteItemById(schema.collection, String(id));
+              } catch {
+              }
+              try {
+                await directus.deleteItemById(detectionsCollection, detId);
+              } catch {
+              }
+              if (fileId) {
+                try {
+                  await directus.deleteFileById(fileId);
+                } catch {
+                }
+              }
+              outcome = { ok: true, status: 'deleted', detectionId: detId, plate };
+            } else {
+              const nowIso2 = new Date().toISOString();
+              const patch = {};
+              if (schema.statusField) patch[schema.statusField] = 'invalid_plate';
+              if (schema.reasonField) patch[schema.reasonField] = 'ocr_no_candidate';
+              if (schema.messageField) patch[schema.messageField] = 'OCR no pudo corregir la patente';
+              if (schema.lastErrorAtField) patch[schema.lastErrorAtField] = nowIso2;
+              if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso2;
+              if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = null;
+              try {
+                await directus.patchRowById(id, patch);
+              } catch {
+              }
+              outcome = { ok: true, status: 'invalid_plate', detectionId: detId, plate };
+            }
+          }
+
+          if (enableDeletion && detId && outcome?.status === 'not_found') {
             const fileId = extractDirectusFileIdFromUrl(imageUrl);
             try {
               await directus.deleteItemById(schema.collection, String(id));
@@ -807,9 +841,42 @@ async function startProcessor() {
               } catch {
               }
             }
-            outcome = { ok: true, status: 'deleted', detectionId: detId, plate };
-          } else {
-            outcome = await processOneRow(row, { limiter, schema, waitGlobalBackoff, markCall });
+            outcome = { ok: true, status: 'deleted', detectionId: detId, plate: outcome?.plate || plate };
+          }
+
+          if (outcome?.status === 'error') {
+            const nowIso2 = new Date().toISOString();
+            const patch = {};
+            if (schema.statusField) patch[schema.statusField] = 'invalid_plate';
+            if (schema.reasonField) patch[schema.reasonField] = 'invalid_plate_after_ocr';
+            if (schema.messageField) patch[schema.messageField] = 'Formato inválido incluso tras OCR';
+            if (schema.lastErrorAtField) patch[schema.lastErrorAtField] = nowIso2;
+            if (schema.fetchedAtField) patch[schema.fetchedAtField] = nowIso2;
+            if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = null;
+            try {
+              await directus.patchRowById(id, patch);
+            } catch {
+            }
+            outcome = { ok: true, status: 'invalid_plate', detectionId: detId, plate: outcome?.plate || plate };
+          }
+
+          if (enableDeletion && detId && (outcome?.status === 'invalid_plate' || outcome?.status === 'not_found')) {
+            const fileId = extractDirectusFileIdFromUrl(imageUrl);
+            try {
+              await directus.deleteItemById(schema.collection, String(id));
+            } catch {
+            }
+            try {
+              await directus.deleteItemById(detectionsCollection, detId);
+            } catch {
+            }
+            if (fileId) {
+              try {
+                await directus.deleteFileById(fileId);
+              } catch {
+              }
+            }
+            outcome = { ok: true, status: 'deleted', detectionId: detId, plate: outcome?.plate || plate };
           }
         } else {
           outcome = await processOneRow(row, { limiter, schema, waitGlobalBackoff, markCall });

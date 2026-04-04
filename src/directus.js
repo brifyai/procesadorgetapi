@@ -229,6 +229,11 @@ async function listQueueByStatus(status, { limit, nowIso } = {}) {
     query[`filter[${schema.nextRetryAtField}][_lte]`] = now;
   }
 
+  if (status === 'error' && schema.nextRetryAtField) {
+    query[`filter[_or][0][${schema.nextRetryAtField}][_null]`] = 'true';
+    query[`filter[_or][1][${schema.nextRetryAtField}][_lte]`] = now;
+  }
+
   const payload = await directusRequest('GET', `/items/${encodeURIComponent(schema.collection)}`, { query });
   return Array.isArray(payload?.data) ? payload.data : [];
 }

@@ -564,6 +564,7 @@ async function startProcessor() {
   const enableOcrFix = parseEnvBool('PROCESSOR_OCR_FIX_ENABLED', true);
   const enableDeletion = parseEnvBool('PROCESSOR_DELETE_UNRECOVERABLE', false);
   const cleanupNotFound = parseEnvBool('PROCESSOR_CLEANUP_NOT_FOUND', false);
+  const cleanupInvalidPlate = parseEnvBool('PROCESSOR_CLEANUP_INVALID_PLATE', true);
 
   logAt(logLevel, 'info', 'Procesador GetAPI iniciado', {
     collection,
@@ -579,7 +580,8 @@ async function startProcessor() {
     retry_all_errors: retryAllErrors,
     ocr_fix_enabled: enableOcrFix && Boolean(getGroqConfig().apiKey),
     delete_unrecoverable: enableDeletion,
-    cleanup_not_found: cleanupNotFound
+    cleanup_not_found: cleanupNotFound,
+    cleanup_invalid_plate: cleanupInvalidPlate
   });
 
   let globalBackoffUntil = 0;
@@ -661,6 +663,10 @@ async function startProcessor() {
           rows = await directus.listQueueByStatus('error', { limit: need, nowIso });
           added = enqueueRows(rows, 'error_other');
         }
+        if (added === 0 && cleanupInvalidPlate) {
+          rows = await directus.listQueueByStatus('invalid_plate', { limit: need, nowIso });
+          added = enqueueRows(rows, 'invalid_plate_cleanup');
+        }
       if (added > 0) logAt(logLevel, 'info', 'Cola recargada', { added, queue: queue.length, source: lastSource });
     } catch (e) {
       logAt(logLevel, 'error', 'Error recargando cola desde Directus', { message: e?.message || String(e) });
@@ -741,7 +747,7 @@ async function startProcessor() {
       const attempts = schema.attemptsField ? Number(row?.[schema.attemptsField] ?? 0) : 0;
       const detId = schema.detectionIdField ? normalizeDetectionId(row?.[schema.detectionIdField]) : null;
 
-      if (claimEnabled && schema.nextRetryAtField && (source === 'pending' || source === 'error_rate_limited' || source === 'error_aborted' || source === 'error_invalid_plate' || source === 'not_found_cleanup' || source === 'error_other')) {
+      if (claimEnabled && schema.nextRetryAtField && (source === 'pending' || source === 'error_rate_limited' || source === 'error_aborted' || source === 'error_invalid_plate' || source === 'not_found_cleanup' || source === 'error_other' || source === 'invalid_plate_cleanup')) {
         const lockUntilIso = new Date(Date.now() + lockMs).toISOString();
         try {
           await directus.claimLockById(id, lockUntilIso);
@@ -824,6 +830,77 @@ async function startProcessor() {
             } catch {
             }
             outcome = { ok: true, status: 'not_found', detectionId: detId, plate };
+          }
+        } else if (source === 'invalid_plate_cleanup') {
+          const detectionsCollection = directus.getDetectionsCollection();
+          let detection = null;
+          if (detId) {
+            try {
+              detection = await directus.getItemById(detectionsCollection, detId, { fields: 'id,license_plate,image_url' });
+            } catch {
+              try {
+                detection = await directus.getItemById(detectionsCollection, detId, { fields: 'id,image_url' });
+              } catch {
+                detection = null;
+              }
+            }
+          }
+
+          const imageUrl = detection?.image_url || detection?.imageUrl || null;
+          const hasOcr = enableOcrFix && Boolean(getGroqConfig().apiKey) && Boolean(imageUrl);
+          const ocrPlate = hasOcr ? await groqOcrPlateFromImageUrl(imageUrl) : null;
+          const candidate = ocrPlate && isValidPlate(ocrPlate) ? ocrPlate : null;
+
+          if (candidate && candidate !== plate) {
+            try {
+              await directus.patchRowById(id, {
+                [schema.plateField]: candidate,
+                ...(schema.statusField ? { [schema.statusField]: 'pending' } : {}),
+                ...(schema.messageField ? { [schema.messageField]: null } : {}),
+                ...(schema.reasonField ? { [schema.reasonField]: 'ocr_fixed_from_invalid_plate' } : {}),
+                ...(schema.nextRetryAtField ? { [schema.nextRetryAtField]: null } : {})
+              });
+            } catch {
+            }
+            if (detId) {
+              try {
+                await directus.patchItemById(detectionsCollection, detId, { license_plate: candidate });
+              } catch {
+              }
+            }
+            const row2 = { ...(row || {}) };
+            row2[schema.plateField] = candidate;
+            outcome = await processOneRow(row2, { limiter, schema, waitGlobalBackoff, markCall });
+          } else if (enableDeletion) {
+            const fileId = extractDirectusFileIdFromUrl(imageUrl);
+            try {
+              await directus.deleteItemById(schema.collection, String(id));
+            } catch {
+            }
+            if (detId) {
+              try {
+                await directus.deleteItemById(detectionsCollection, detId);
+              } catch {
+              }
+            }
+            if (fileId) {
+              try {
+                await directus.deleteFileById(fileId);
+              } catch {
+              }
+            }
+            outcome = { ok: true, status: 'deleted', detectionId: detId, plate };
+          } else {
+            const nextIso = schema.nextRetryAtField ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null;
+            const patch = {};
+            if (schema.reasonField) patch[schema.reasonField] = candidate ? 'invalid_plate_candidate_same' : 'invalid_plate_no_candidate';
+            if (schema.messageField) patch[schema.messageField] = 'Patente inválida sin candidato OCR; no se elimina (config).';
+            if (schema.nextRetryAtField) patch[schema.nextRetryAtField] = nextIso;
+            try {
+              await directus.patchRowById(id, patch);
+            } catch {
+            }
+            outcome = { ok: true, status: 'invalid_plate', detectionId: detId, plate };
           }
         } else if (source === 'error_invalid_plate' && enableOcrFix && getGroqConfig().apiKey) {
           const detectionsCollection = directus.getDetectionsCollection();
